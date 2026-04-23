@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>drive deodorant</title>
+    <title>drive deodorant🍦🍾</title>
     <style>
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
@@ -11,8 +11,9 @@
             font-family: 'Courier New', Courier, monospace;
             display: flex; justify-content: center; align-items: center;
         }
-        canvas { display: none; } 
+        canvas { display: none; background: #000; } 
         
+        /* Start Screen */
         #loading-screen {
             position: absolute; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -21,21 +22,22 @@
         }
 
         #percent-text {
-            font-size: 100px; font-weight: bold; color: #00ffcc;
-            text-shadow: 0 0 30px #000, 5px 5px 0px #000;
+            font-size: 80px; font-weight: bold; color: #00ffcc;
+            text-shadow: 0 0 20px #000;
         }
 
         #startBtn {
-            display: none; margin-top: 25px; padding: 15px 50px;
-            background: #00ffcc; color: #000; border: none;
+            display: none; margin-top: 20px; padding: 20px 60px;
+            background: #00ff66; color: #000; border: none;
             font-weight: bold; cursor: pointer; border-radius: 5px;
-            font-size: 24px; text-transform: uppercase;
+            font-size: 28px; text-transform: uppercase;
+            box-shadow: 0 0 20px #00ff66;
         }
 
-        /* Terminal Pause Menu */
+        /* Admin Mod Terminal Overlay */
         #pause-overlay {
             position: absolute; width: 100%; height: 100%;
-            background: rgba(0, 10, 0, 0.85);
+            background: rgba(0, 15, 0, 0.9);
             display: none; flex-direction: column; justify-content: center; align-items: center;
             z-index: 1000;
         }
@@ -43,20 +45,22 @@
         .terminal-window {
             background: #000; border: 3px solid #00ff66;
             padding: 30px; display: flex; flex-direction: column; gap: 20px;
-            box-shadow: 0 0 30px #00ff66; text-align: center;
+            box-shadow: 0 0 30px #00ff66; text-align: center; width: 350px;
         }
 
         #adminInput {
             background: #001100; border: 1px solid #00ff66; color: #00ff66;
-            padding: 10px; font-size: 18px; outline: none; text-align: center;
+            padding: 12px; font-size: 18px; outline: none; text-align: center;
         }
 
-        #resumeBtn {
+        .terminal-btn {
             background: #00ff66; color: #000; border: none;
-            font-weight: bold; cursor: pointer; padding: 10px; font-size: 20px;
+            font-weight: bold; cursor: pointer; padding: 12px; font-size: 20px;
+            transition: 0.2s;
         }
+        .terminal-btn:hover { background: #00cc55; }
 
-        /* Easter Egg / Video Overlays */
+        /* Secret Code Visuals */
         #easter-egg {
             position: absolute; width: 100%; height: 100%;
             background: #000 url('Jamper.png') no-repeat center;
@@ -69,64 +73,73 @@
             justify-content: center; align-items: center;
         }
 
-        /* Restricts video size so it doesn't overflow */
-        #tuffVideo {
-            max-width: 90vw;
-            max-height: 90vh;
-            border: 3px solid #00ff66;
-            box-shadow: 0 0 30px #00ff66;
+        #tuffVideo { 
+            max-width: 90vw; 
+            max-height: 90vh; 
+            border: 2px solid #00ff66; 
+            box-shadow: 0 0 20px #00ff66;
         }
 
-        /* Unified popup message styling */
         #tuff-message {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #00ff66; font-size: 30px; font-weight: bold; text-align: center;
-            background: rgba(0, 20, 0, 0.95); padding: 30px; border: 2px solid #00ff66;
+            color: #00ff66; font-size: 24px; font-weight: bold; text-align: center;
+            background: #000; padding: 25px; border: 2px solid #00ff66;
             display: none; z-index: 5000; box-shadow: 0 0 20px #00ff66;
-            text-shadow: 2px 2px #000;
+        }
+
+        /* Gameplay UI */
+        .controls-hint {
+            position: absolute; bottom: 30px; width: 100%; text-align: center;
+            color: #00ffcc; font-size: 16px; text-shadow: 2px 2px #000; 
+            pointer-events: none; display: none; z-index: 100;
+            letter-spacing: 1px;
+        }
+
+        .score-board { 
+            position: absolute; top: 20px; left: 20px; font-size: 28px; 
+            font-weight: bold; color: #00ffcc; display: none; text-shadow: 2px 2px #000; 
         }
 
         #countdown-text {
-            position: absolute; font-size: 150px; color: #00ff66;
+            position: absolute; font-size: 120px; color: #00ff66;
             font-weight: bold; display: none; z-index: 2000;
-            text-shadow: 0 0 20px #00ff66;
         }
 
-        .controls-hint {
-            position: absolute; top: 20px; width: 100%; text-align: center;
-            color: #00ffcc; font-size: 18px; text-shadow: 2px 2px #000; pointer-events: none; display: none;
+        #retryBtn { 
+            display: none; position: absolute; padding: 20px 40px; font-size: 24px; 
+            background: #00ff66; color: #000; border: none; cursor: pointer; 
+            top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 600; 
+            font-weight: bold; box-shadow: 0 0 15px #00ff66;
         }
-
-        .score-board { position: absolute; bottom: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #00ffcc; display: none; }
-        #retryBtn { display: none; position: absolute; padding: 20px 40px; font-size: 24px; background: #00ffcc; color: #000; border: none; cursor: pointer; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 600; font-weight: bold;}
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
         <div id="percent-text">0%</div>
-        <button id="startBtn">START BOTTLE</button>
+        <button id="startBtn">PLAY GAME</button>
     </div>
 
     <div id="video-container">
-        <video id="tuffVideo" src="jandel.mp4"></video>
+        <video id="tuffVideo" src="Jandel.mp4"></video>
     </div>
-    <div id="tuff-message">YOU GET +1500 FOR BEING TUFF JAMPER</div>
+    
+    <div id="tuff-message">ERROR: ROOT_MESSAGE_NULL</div>
 
     <div id="easter-egg"></div>
 
     <div id="pause-overlay">
         <div class="terminal-window">
-            <div style="color:#00ff66; margin-bottom:10px;">SYSTEM_PAUSED // ROOT_ACCESS</div>
-            <input type="text" id="adminInput" placeholder="ENTER CODE..." autofocus>
-            <button id="resumeBtn">PLAY / EXECUTE</button>
+            <div style="color:#00ff66; margin-bottom:5px;">ADMIN_MOD_ACTIVE</div>
+            <input type="text" id="adminInput" placeholder="CMD_ROOT..." autofocus autocomplete="off">
+            <button id="resumeBtn" class="terminal-btn">RESUME_PLAY</button>
         </div>
     </div>
 
     <div id="countdown-text">3</div>
 
     <div class="controls-hint" id="controlText">
-        [UP/SPACE] JUMP | [DOWN/S/W] DOVE | [ESC] PAUSE
+        [UP/SPACE] DOUBLE JUMP | [DOWN/S/W] THROW DOVE | [ESC] ADMIN MOD
     </div>
 
     <div class="score-board" id="scoreDisplay">SCORE: 0</div>
@@ -137,13 +150,8 @@
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-const percentText = document.getElementById('percent-text');
 const startBtn = document.getElementById('startBtn');
 const pauseOverlay = document.getElementById('pause-overlay');
-const eggOverlay = document.getElementById('easter-egg');
-const videoContainer = document.getElementById('video-container');
-const tuffVideo = document.getElementById('tuffVideo');
-const tuffMsg = document.getElementById('tuff-message');
 const adminInput = document.getElementById('adminInput');
 const countdownDisplay = document.getElementById('countdown-text');
 
@@ -165,11 +173,9 @@ for (let key in sources) {
     images[key].src = sources[key];
     images[key].onload = () => {
         loadedCount++;
-        let percent = Math.floor((loadedCount / totalImages) * 100);
-        percentText.innerText = percent + "%";
-        if (loadedCount === totalImages) startBtn.style.display = "inline-block";
+        document.getElementById('percent-text').innerText = Math.floor((loadedCount/totalImages)*100) + "%";
+        if (loadedCount === totalImages) startBtn.style.display = "block";
     };
-    images[key].onerror = () => { percentText.innerText = "ERROR"; };
 }
 
 startBtn.onclick = () => {
@@ -187,65 +193,53 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-let speed = 8;
-let score = 0;
-let gameOver = false;
-let paused = false;
-let isCountingDown = false;
-let bgScroll = 0;
-let projectiles = [];
-let playerProjectiles = [];
-let player = { x: 0, y: 0, w: 70, h: 70, dy: 0, grounded: false, recoil: 0 };
-let hitFeedback = 0;
-let spawnTimer = 0;
+let speed = 8, score = 0, gameOver = false, paused = false, isCountingDown = false;
 let tuffJamperUsed = false;
+let projectiles = [], playerProjectiles = [];
+let player = { x: 0, y: 0, w: 75, h: 75, dy: 0, jumps: 0, recoil: 0 };
+let bgScroll = 0, spawnTimer = 0, hitFeedback = 0;
 
 function handleCommand() {
     const val = adminInput.value.trim();
     if (val === '67') {
         adminInput.value = '';
-        eggOverlay.style.display = 'block';
-        setTimeout(() => { eggOverlay.style.display = 'none'; adminInput.focus(); }, 3000);
+        document.getElementById('easter-egg').style.display = 'block';
+        setTimeout(() => { 
+            document.getElementById('easter-egg').style.display = 'none'; 
+            adminInput.focus(); 
+        }, 3000);
     } 
     else if (val === 'TuffJamper') {
         adminInput.value = '';
-        
         if (!tuffJamperUsed) {
             tuffJamperUsed = true;
-            pauseOverlay.style.display = 'none'; 
-            videoContainer.style.display = 'flex';
-            tuffVideo.play();
-            
-            tuffVideo.onended = () => {
-                videoContainer.style.display = 'none';
-                pauseOverlay.style.display = 'flex'; 
-                
-                tuffMsg.innerText = "YOU GET +1500 FOR BEING TUFF JAMPER";
-                tuffMsg.style.display = 'block';
-                score += 1500;
-                document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
-                
-                setTimeout(() => {
-                    tuffMsg.style.display = 'none';
-                    adminInput.focus();
-                }, 3000);
+            pauseOverlay.style.display = 'none';
+            document.getElementById('video-container').style.display = 'flex';
+            const vid = document.getElementById('tuffVideo');
+            vid.play();
+            vid.onended = () => {
+                document.getElementById('video-container').style.display = 'none';
+                pauseOverlay.style.display = 'flex';
+                showPopup("YOU GET +1500 FOR BEING TUFF JAMPER", 1500);
             };
         } else {
-            tuffMsg.innerText = "bro are we fr";
-            tuffMsg.style.display = 'block';
-            setTimeout(() => {
-                tuffMsg.style.display = 'none';
-                adminInput.focus();
-            }, 2500);
+            showPopup("bro are we fr", 0);
         }
     }
-    else {
-        startCountdown();
-    }
+    else { startCountdown(); }
+}
+
+function showPopup(msg, bonus) {
+    const m = document.getElementById('tuff-message');
+    m.innerText = msg;
+    m.style.display = 'block';
+    score += bonus;
+    document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
+    setTimeout(() => { m.style.display = 'none'; adminInput.focus(); }, 2500);
 }
 
 function togglePause() {
-    if (gameOver || isCountingDown || videoContainer.style.display === 'flex' || tuffMsg.style.display === 'block') return;
+    if (gameOver || isCountingDown || document.getElementById('video-container').style.display === 'flex') return;
     if (!paused) {
         paused = true;
         pauseOverlay.style.display = 'flex';
@@ -264,9 +258,8 @@ function startCountdown() {
     countdownDisplay.innerText = count;
     let timer = setInterval(() => {
         count--;
-        if (count > 0) {
-            countdownDisplay.innerText = count;
-        } else {
+        if (count > 0) countdownDisplay.innerText = count;
+        else {
             clearInterval(timer);
             countdownDisplay.style.display = 'none';
             isCountingDown = false;
@@ -276,29 +269,32 @@ function startCountdown() {
 }
 
 document.getElementById('resumeBtn').onclick = handleCommand;
-adminInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') handleCommand();
-});
+adminInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleCommand(); });
 
 window.addEventListener('keydown', e => {
     if (e.code === 'Escape') togglePause();
-    if (gameOver || paused || isCountingDown || document.activeElement.id === 'adminInput') return;
+    if (gameOver || paused || isCountingDown || document.activeElement === adminInput) return;
     
-    if ((e.code === 'Space' || e.code === 'ArrowUp') && player.grounded) {
-        player.dy = -18; player.grounded = false;
+    // Double Jump
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+        if (player.jumps < 2) {
+            player.dy = -16;
+            player.jumps++;
+        }
     }
+    // Throw
     if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.code === 'KeyW') {
-        playerProjectiles.push({ x: player.x, y: player.y + 20, vx: -15 });
-        player.recoil = 8;
+        playerProjectiles.push({ x: player.x, y: player.y + 25, vx: -16 });
+        player.recoil = 10;
     }
 });
 
 function resetGame() {
     score = 0; speed = 8; gameOver = false; paused = false; tuffJamperUsed = false;
     projectiles = []; playerProjectiles = [];
-    player.x = canvas.width - 150;
-    player.y = canvas.height - 170; 
-    player.dy = 0;
+    player.x = canvas.width - 160;
+    player.y = canvas.height - 180;
+    player.dy = 0; player.jumps = 0;
     document.getElementById('retryBtn').style.display = 'none';
     update();
 }
@@ -307,33 +303,38 @@ function update() {
     if (gameOver || paused || isCountingDown) return;
     const groundY = canvas.height - 100;
     speed += 0.001; 
-    player.dy += 0.9;
+    player.dy += 0.85;
     player.y += player.dy;
+
     if (player.y > groundY - player.h) { 
-        player.y = groundY - player.h; player.dy = 0; player.grounded = true; 
+        player.y = groundY - player.h; player.dy = 0; player.jumps = 0; 
     }
+    
     if (player.recoil > 0) player.recoil--;
     bgScroll -= speed;
     spawnTimer++;
-    if (spawnTimer > (60 / (speed/8)) + Math.random() * 30) {
-        projectiles.push({ x: -50, y: groundY - 50, vx: speed + 4 });
+
+    if (spawnTimer > (60 / (speed/8)) + Math.random() * 40) {
+        projectiles.push({ x: -50, y: groundY - 55, vx: speed + 4 });
         spawnTimer = 0;
     }
-    for (let i = projectiles.length - 1; i >= 0; i--) {
-        const p = projectiles[i]; p.x += p.vx;
-        if (p.x < player.x + player.w - 15 && p.x + 40 > player.x + 15 && p.y < player.y + player.h && p.y + 40 > player.y) {
+
+    projectiles.forEach((p, i) => {
+        p.x += p.vx;
+        if (p.x < player.x + player.w - 20 && p.x + 40 > player.x + 20 && p.y < player.y + player.h && p.y + 40 > player.y) {
             gameOver = true; document.getElementById('retryBtn').style.display = 'block';
         }
-        if (p.x > canvas.width + 100) projectiles.splice(i, 1);
-    }
-    for (let j = playerProjectiles.length - 1; j >= 0; j--) {
-        const dp = playerProjectiles[j]; dp.x += dp.vx;
+    });
+
+    playerProjectiles.forEach((dp, j) => {
+        dp.x += dp.vx;
         if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) {
             score += 500; hitFeedback = 10; playerProjectiles.splice(j, 1);
-        } else if (dp.x < -50) playerProjectiles.splice(j, 1);
-    }
+        }
+    });
+
     if (hitFeedback > 0) hitFeedback--;
-    score += Math.floor(speed / 8); 
+    score += Math.floor(speed / 8);
     document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
     draw();
     requestAnimationFrame(update);
@@ -348,17 +349,17 @@ function draw() {
     }
     const groundY = canvas.height - 100;
     if (hitFeedback > 0) ctx.filter = "brightness(3) invert(1)";
-    ctx.drawImage(images.enemy, 30, groundY - 120, 120, 120);
+    ctx.drawImage(images.enemy, 30, groundY - 130, 130, 130);
     ctx.filter = "none";
-    ctx.drawImage(images.bottle, 140, groundY - 70, 50, 50);
+    ctx.drawImage(images.bottle, 160, groundY - 70, 50, 50);
+
     playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
     projectiles.forEach(p => {
-        ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
-        ctx.beginPath();
-        ctx.ellipse(p.x + 25, groundY - 10, 20, 6, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.drawImage(images.wata, p.x, p.y, 50, 50);
+        ctx.fillStyle = "rgba(0,0,0,0.3)";
+        ctx.beginPath(); ctx.ellipse(p.x + 25, groundY - 10, 20, 6, 0, 0, Math.PI*2); ctx.fill();
+        ctx.drawImage(images.wata, p.x, p.y, 55, 55);
     });
+
     ctx.drawImage(images.player, player.x + player.recoil, player.y, player.w, player.h);
 }
 </script>
