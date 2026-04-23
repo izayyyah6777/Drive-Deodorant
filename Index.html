@@ -32,7 +32,6 @@
             font-size: 24px; text-transform: uppercase;
             box-shadow: 0 0 20px #00ffcc; transition: 0.2s;
         }
-        #startBtn:hover { transform: scale(1.1); background: #fff; }
 
         .score-board { position: absolute; bottom: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #00ffcc; display: none; text-shadow: 2px 2px #000; }
         #retryBtn { display: none; position: absolute; padding: 20px 40px; font-size: 24px; background: #00ffcc; color: #000; border: none; cursor: pointer; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 600; font-weight: bold;}
@@ -56,7 +55,6 @@ const ctx = canvas.getContext('2d');
 const percentText = document.getElementById('percent-text');
 const startBtn = document.getElementById('startBtn');
 
-// ALL ASSETS FROM YOUR SCREENSHOTS
 const images = {};
 const sources = {
     player: 'Jamper.png',
@@ -77,14 +75,9 @@ for (let key in sources) {
         loadedCount++;
         let percent = Math.floor((loadedCount / totalImages) * 100);
         percentText.innerText = percent + "%";
-        if (loadedCount === totalImages) {
-            startBtn.style.display = "inline-block";
-        }
+        if (loadedCount === totalImages) startBtn.style.display = "inline-block";
     };
-    images[key].onerror = () => { 
-        percentText.innerText = "!"; 
-        console.log("Failed to load: " + sources[key]);
-    };
+    images[key].onerror = () => { percentText.innerText = "ERROR"; };
 }
 
 startBtn.onclick = () => {
@@ -101,24 +94,38 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-let currentScrollSpeed = 8;
+let speed = 8;
 let score = 0;
 let gameOver = false;
 let bgScroll = 0;
 let projectiles = [];
-let player = { x: 150, y: 0, w: 70, h: 70, dy: 0, grounded: false };
+let playerProjectiles = [];
+let player = { x: 0, y: 0, w: 70, h: 70, dy: 0, grounded: false, recoil: 0 };
+let hitFeedback = 0;
+let spawnTimer = 0;
 
 function resetGame() {
-    score = 0; gameOver = false; projectiles = []; 
-    player.y = canvas.height - 170; player.dy = 0;
+    score = 0; speed = 8; gameOver = false; projectiles = []; playerProjectiles = [];
+    player.x = canvas.width - 150;
+    player.y = canvas.height - 170; 
+    player.dy = 0;
     document.getElementById('retryBtn').style.display = 'none';
     update();
 }
 
 window.addEventListener('keydown', e => {
-    if (e.code === 'Space' && !gameOver && player.grounded) {
+    if (gameOver) return;
+    
+    // JUMP (Space)
+    if (e.code === 'Space' && player.grounded) {
         player.dy = -18; 
         player.grounded = false;
+    }
+
+    // THROW DOVE (W, S, or ArrowDown)
+    if (e.code === 'KeyW' || e.code === 'KeyS' || e.code === 'ArrowDown') {
+        playerProjectiles.push({ x: player.x, y: player.y + 20, vx: -15 });
+        player.recoil = 5; // Adds a tiny visual kickback
     }
 });
 
@@ -126,27 +133,48 @@ function update() {
     if (gameOver) return;
     const groundY = canvas.height - 100;
 
+    speed += 0.001; 
+
     player.dy += 0.9;
     player.y += player.dy;
     if (player.y > groundY - player.h) { 
         player.y = groundY - player.h; player.dy = 0; player.grounded = true; 
     }
-    bgScroll -= currentScrollSpeed;
+    
+    if (player.recoil > 0) player.recoil--;
 
-    // Obstacles
-    if (Math.random() < 0.035) {
-        projectiles.push({ x: canvas.width, y: groundY - 50, vx: -currentScrollSpeed - 2 });
+    bgScroll -= speed;
+
+    spawnTimer++;
+    if (spawnTimer > (60 / (speed/8)) + Math.random() * 30) {
+        projectiles.push({ x: -50, y: groundY - 50, vx: speed + 4 });
+        spawnTimer = 0;
     }
 
+    // Enemy Projectiles (Wata)
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i]; p.x += p.vx;
         if (p.x < player.x + player.w - 15 && p.x + 40 > player.x + 15 && p.y < player.y + player.h && p.y + 40 > player.y) {
             gameOver = true; document.getElementById('retryBtn').style.display = 'block';
         }
-        if (p.x < -100) projectiles.splice(i, 1);
+        if (p.x > canvas.width + 100) projectiles.splice(i, 1);
     }
 
-    score++;
+    // Player Projectiles (Dove)
+    for (let j = playerProjectiles.length - 1; j >= 0; j--) {
+        const dp = playerProjectiles[j]; dp.x += dp.vx;
+        // Collision with Lerma (approximate position)
+        if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) {
+            score += 500;
+            hitFeedback = 10;
+            playerProjectiles.splice(j, 1);
+        } else if (dp.x < -50) {
+            playerProjectiles.splice(j, 1);
+        }
+    }
+
+    if (hitFeedback > 0) hitFeedback--;
+    score += Math.floor(speed / 8); 
     document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
     draw();
     requestAnimationFrame(update);
@@ -155,7 +183,6 @@ function update() {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     
-    // Tiled Background
     const bgW = images.bg.width || 100;
     const shiftX = bgScroll % bgW;
     for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) {
@@ -164,17 +191,26 @@ function draw() {
 
     const groundY = canvas.height - 100;
     
-    // Lerma and the Goal
-    ctx.drawImage(images.enemy, canvas.width - 150, groundY - 120, 120, 120);
-    ctx.drawImage(images.bottle, canvas.width - 180, groundY - 70, 50, 50);
+    // Lerma
+    if (hitFeedback > 0) ctx.filter = "brightness(3) hue-rotate(90deg)";
+    ctx.drawImage(images.enemy, 30, groundY - 120, 120, 120);
+    ctx.filter = "none";
+    ctx.drawImage(images.bottle, 140, groundY - 70, 50, 50);
 
-    // Player
-    ctx.drawImage(images.player, player.x, player.y, player.w, player.h);
+    // Doves
+    playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
 
-    // Wata Obstacles
+    // Wata
     projectiles.forEach(p => {
+        ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+        ctx.beginPath();
+        ctx.ellipse(p.x + 25, groundY - 10, 20, 6, 0, 0, Math.PI * 2);
+        ctx.fill();
         ctx.drawImage(images.wata, p.x, p.y, 50, 50);
     });
+
+    // Jamper (with recoil offset)
+    ctx.drawImage(images.player, player.x + player.recoil, player.y, player.w, player.h);
 }
 </script>
 </body>
