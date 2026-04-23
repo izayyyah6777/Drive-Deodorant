@@ -8,7 +8,7 @@
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
             overflow: hidden; background: #000; 
-            font-family: 'Segoe UI', Impact, sans-serif;
+            font-family: 'Courier New', Courier, monospace;
             display: flex; justify-content: center; align-items: center;
         }
         canvas { display: none; } 
@@ -30,10 +30,74 @@
             background: #00ffcc; color: #000; border: none;
             font-weight: bold; cursor: pointer; border-radius: 5px;
             font-size: 24px; text-transform: uppercase;
-            box-shadow: 0 0 20px #00ffcc; transition: 0.2s;
         }
 
-        .score-board { position: absolute; bottom: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #00ffcc; display: none; text-shadow: 2px 2px #000; }
+        /* Terminal Pause Menu */
+        #pause-overlay {
+            position: absolute; width: 100%; height: 100%;
+            background: rgba(0, 10, 0, 0.85);
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 1000;
+        }
+
+        .terminal-window {
+            background: #000; border: 3px solid #00ff66;
+            padding: 30px; display: flex; flex-direction: column; gap: 20px;
+            box-shadow: 0 0 30px #00ff66; text-align: center;
+        }
+
+        #adminInput {
+            background: #001100; border: 1px solid #00ff66; color: #00ff66;
+            padding: 10px; font-size: 18px; outline: none; text-align: center;
+        }
+
+        #resumeBtn {
+            background: #00ff66; color: #000; border: none;
+            font-weight: bold; cursor: pointer; padding: 10px; font-size: 20px;
+        }
+
+        /* Easter Egg / Video Overlays */
+        #easter-egg {
+            position: absolute; width: 100%; height: 100%;
+            background: #000 url('Jamper.png') no-repeat center;
+            background-size: contain; display: none; z-index: 3000;
+        }
+
+        #video-container {
+            position: absolute; width: 100%; height: 100%;
+            background: #000; display: none; z-index: 4000;
+            justify-content: center; align-items: center;
+        }
+
+        /* Restricts video size so it doesn't overflow */
+        #tuffVideo {
+            max-width: 90vw;
+            max-height: 90vh;
+            border: 3px solid #00ff66;
+            box-shadow: 0 0 30px #00ff66;
+        }
+
+        /* Unified popup message styling */
+        #tuff-message {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            color: #00ff66; font-size: 30px; font-weight: bold; text-align: center;
+            background: rgba(0, 20, 0, 0.95); padding: 30px; border: 2px solid #00ff66;
+            display: none; z-index: 5000; box-shadow: 0 0 20px #00ff66;
+            text-shadow: 2px 2px #000;
+        }
+
+        #countdown-text {
+            position: absolute; font-size: 150px; color: #00ff66;
+            font-weight: bold; display: none; z-index: 2000;
+            text-shadow: 0 0 20px #00ff66;
+        }
+
+        .controls-hint {
+            position: absolute; top: 20px; width: 100%; text-align: center;
+            color: #00ffcc; font-size: 18px; text-shadow: 2px 2px #000; pointer-events: none; display: none;
+        }
+
+        .score-board { position: absolute; bottom: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #00ffcc; display: none; }
         #retryBtn { display: none; position: absolute; padding: 20px 40px; font-size: 24px; background: #00ffcc; color: #000; border: none; cursor: pointer; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 600; font-weight: bold;}
     </style>
 </head>
@@ -42,6 +106,27 @@
     <div id="loading-screen">
         <div id="percent-text">0%</div>
         <button id="startBtn">START BOTTLE</button>
+    </div>
+
+    <div id="video-container">
+        <video id="tuffVideo" src="jandel.mp4"></video>
+    </div>
+    <div id="tuff-message">YOU GET +1500 FOR BEING TUFF JAMPER</div>
+
+    <div id="easter-egg"></div>
+
+    <div id="pause-overlay">
+        <div class="terminal-window">
+            <div style="color:#00ff66; margin-bottom:10px;">SYSTEM_PAUSED // ROOT_ACCESS</div>
+            <input type="text" id="adminInput" placeholder="ENTER CODE..." autofocus>
+            <button id="resumeBtn">PLAY / EXECUTE</button>
+        </div>
+    </div>
+
+    <div id="countdown-text">3</div>
+
+    <div class="controls-hint" id="controlText">
+        [UP/SPACE] JUMP | [DOWN/S/W] DOVE | [ESC] PAUSE
     </div>
 
     <div class="score-board" id="scoreDisplay">SCORE: 0</div>
@@ -54,6 +139,13 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const percentText = document.getElementById('percent-text');
 const startBtn = document.getElementById('startBtn');
+const pauseOverlay = document.getElementById('pause-overlay');
+const eggOverlay = document.getElementById('easter-egg');
+const videoContainer = document.getElementById('video-container');
+const tuffVideo = document.getElementById('tuffVideo');
+const tuffMsg = document.getElementById('tuff-message');
+const adminInput = document.getElementById('adminInput');
+const countdownDisplay = document.getElementById('countdown-text');
 
 const images = {};
 const sources = {
@@ -83,6 +175,7 @@ for (let key in sources) {
 startBtn.onclick = () => {
     document.getElementById('loading-screen').style.display = 'none';
     canvas.style.display = 'block';
+    document.getElementById('controlText').style.display = 'block';
     document.getElementById('scoreDisplay').style.display = 'block';
     resize();
     resetGame();
@@ -97,15 +190,112 @@ window.addEventListener('resize', resize);
 let speed = 8;
 let score = 0;
 let gameOver = false;
+let paused = false;
+let isCountingDown = false;
 let bgScroll = 0;
 let projectiles = [];
 let playerProjectiles = [];
 let player = { x: 0, y: 0, w: 70, h: 70, dy: 0, grounded: false, recoil: 0 };
 let hitFeedback = 0;
 let spawnTimer = 0;
+let tuffJamperUsed = false;
+
+function handleCommand() {
+    const val = adminInput.value.trim();
+    if (val === '67') {
+        adminInput.value = '';
+        eggOverlay.style.display = 'block';
+        setTimeout(() => { eggOverlay.style.display = 'none'; adminInput.focus(); }, 3000);
+    } 
+    else if (val === 'TuffJamper') {
+        adminInput.value = '';
+        
+        if (!tuffJamperUsed) {
+            tuffJamperUsed = true;
+            pauseOverlay.style.display = 'none'; 
+            videoContainer.style.display = 'flex';
+            tuffVideo.play();
+            
+            tuffVideo.onended = () => {
+                videoContainer.style.display = 'none';
+                pauseOverlay.style.display = 'flex'; 
+                
+                tuffMsg.innerText = "YOU GET +1500 FOR BEING TUFF JAMPER";
+                tuffMsg.style.display = 'block';
+                score += 1500;
+                document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
+                
+                setTimeout(() => {
+                    tuffMsg.style.display = 'none';
+                    adminInput.focus();
+                }, 3000);
+            };
+        } else {
+            tuffMsg.innerText = "bro are we fr";
+            tuffMsg.style.display = 'block';
+            setTimeout(() => {
+                tuffMsg.style.display = 'none';
+                adminInput.focus();
+            }, 2500);
+        }
+    }
+    else {
+        startCountdown();
+    }
+}
+
+function togglePause() {
+    if (gameOver || isCountingDown || videoContainer.style.display === 'flex' || tuffMsg.style.display === 'block') return;
+    if (!paused) {
+        paused = true;
+        pauseOverlay.style.display = 'flex';
+        adminInput.focus();
+    } else {
+        handleCommand();
+    }
+}
+
+function startCountdown() {
+    paused = false;
+    pauseOverlay.style.display = 'none';
+    isCountingDown = true;
+    countdownDisplay.style.display = 'block';
+    let count = 3;
+    countdownDisplay.innerText = count;
+    let timer = setInterval(() => {
+        count--;
+        if (count > 0) {
+            countdownDisplay.innerText = count;
+        } else {
+            clearInterval(timer);
+            countdownDisplay.style.display = 'none';
+            isCountingDown = false;
+            update();
+        }
+    }, 1000);
+}
+
+document.getElementById('resumeBtn').onclick = handleCommand;
+adminInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') handleCommand();
+});
+
+window.addEventListener('keydown', e => {
+    if (e.code === 'Escape') togglePause();
+    if (gameOver || paused || isCountingDown || document.activeElement.id === 'adminInput') return;
+    
+    if ((e.code === 'Space' || e.code === 'ArrowUp') && player.grounded) {
+        player.dy = -18; player.grounded = false;
+    }
+    if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.code === 'KeyW') {
+        playerProjectiles.push({ x: player.x, y: player.y + 20, vx: -15 });
+        player.recoil = 8;
+    }
+});
 
 function resetGame() {
-    score = 0; speed = 8; gameOver = false; projectiles = []; playerProjectiles = [];
+    score = 0; speed = 8; gameOver = false; paused = false; tuffJamperUsed = false;
+    projectiles = []; playerProjectiles = [];
     player.x = canvas.width - 150;
     player.y = canvas.height - 170; 
     player.dy = 0;
@@ -113,45 +303,22 @@ function resetGame() {
     update();
 }
 
-window.addEventListener('keydown', e => {
-    if (gameOver) return;
-    
-    // JUMP (Space)
-    if (e.code === 'Space' && player.grounded) {
-        player.dy = -18; 
-        player.grounded = false;
-    }
-
-    // THROW DOVE (W, S, or ArrowDown)
-    if (e.code === 'KeyW' || e.code === 'KeyS' || e.code === 'ArrowDown') {
-        playerProjectiles.push({ x: player.x, y: player.y + 20, vx: -15 });
-        player.recoil = 5; // Adds a tiny visual kickback
-    }
-});
-
 function update() {
-    if (gameOver) return;
+    if (gameOver || paused || isCountingDown) return;
     const groundY = canvas.height - 100;
-
     speed += 0.001; 
-
     player.dy += 0.9;
     player.y += player.dy;
     if (player.y > groundY - player.h) { 
         player.y = groundY - player.h; player.dy = 0; player.grounded = true; 
     }
-    
     if (player.recoil > 0) player.recoil--;
-
     bgScroll -= speed;
-
     spawnTimer++;
     if (spawnTimer > (60 / (speed/8)) + Math.random() * 30) {
         projectiles.push({ x: -50, y: groundY - 50, vx: speed + 4 });
         spawnTimer = 0;
     }
-
-    // Enemy Projectiles (Wata)
     for (let i = projectiles.length - 1; i >= 0; i--) {
         const p = projectiles[i]; p.x += p.vx;
         if (p.x < player.x + player.w - 15 && p.x + 40 > player.x + 15 && p.y < player.y + player.h && p.y + 40 > player.y) {
@@ -159,20 +326,12 @@ function update() {
         }
         if (p.x > canvas.width + 100) projectiles.splice(i, 1);
     }
-
-    // Player Projectiles (Dove)
     for (let j = playerProjectiles.length - 1; j >= 0; j--) {
         const dp = playerProjectiles[j]; dp.x += dp.vx;
-        // Collision with Lerma (approximate position)
         if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) {
-            score += 500;
-            hitFeedback = 10;
-            playerProjectiles.splice(j, 1);
-        } else if (dp.x < -50) {
-            playerProjectiles.splice(j, 1);
-        }
+            score += 500; hitFeedback = 10; playerProjectiles.splice(j, 1);
+        } else if (dp.x < -50) playerProjectiles.splice(j, 1);
     }
-
     if (hitFeedback > 0) hitFeedback--;
     score += Math.floor(speed / 8); 
     document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
@@ -182,25 +341,17 @@ function update() {
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
     const bgW = images.bg.width || 100;
     const shiftX = bgScroll % bgW;
     for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) {
         ctx.drawImage(images.bg, x, 0, bgW, canvas.height);
     }
-
     const groundY = canvas.height - 100;
-    
-    // Lerma
-    if (hitFeedback > 0) ctx.filter = "brightness(3) hue-rotate(90deg)";
+    if (hitFeedback > 0) ctx.filter = "brightness(3) invert(1)";
     ctx.drawImage(images.enemy, 30, groundY - 120, 120, 120);
     ctx.filter = "none";
     ctx.drawImage(images.bottle, 140, groundY - 70, 50, 50);
-
-    // Doves
     playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
-
-    // Wata
     projectiles.forEach(p => {
         ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
         ctx.beginPath();
@@ -208,8 +359,6 @@ function draw() {
         ctx.fill();
         ctx.drawImage(images.wata, p.x, p.y, 50, 50);
     });
-
-    // Jamper (with recoil offset)
     ctx.drawImage(images.player, player.x + player.recoil, player.y, player.w, player.h);
 }
 </script>
