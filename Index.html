@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>drive deodorant🍦🍾</title>
+    <title>drive deodorant</title>
     <style>
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
@@ -34,18 +34,28 @@
             box-shadow: 0 0 20px #00ff66;
         }
 
-        /* Admin Mod Terminal Overlay */
+        /* FAMILIAR PAUSE SCREEN */
         #pause-overlay {
             position: absolute; width: 100%; height: 100%;
             background: rgba(0, 15, 0, 0.9);
             display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000;
+            z-index: 1000; gap: 30px;
         }
 
-        .terminal-window {
-            background: #000; border: 3px solid #00ff66;
-            padding: 30px; display: flex; flex-direction: column; gap: 20px;
-            box-shadow: 0 0 30px #00ff66; text-align: center; width: 350px;
+        .terminal-block {
+            border: 3px solid #00ff66; background: #000;
+            width: 380px; text-align: center;
+            box-shadow: 0 0 25px #00ff66;
+        }
+
+        .terminal-header {
+            color: #000; background: #00ff66;
+            font-weight: bold; padding: 10px; font-size: 20px;
+            text-transform: uppercase; letter-spacing: 2px;
+        }
+
+        .terminal-body {
+            color: #00ff66; padding: 20px; display: flex; flex-direction: column; gap: 15px;
         }
 
         #adminInput {
@@ -56,11 +66,28 @@
         .terminal-btn {
             background: #00ff66; color: #000; border: none;
             font-weight: bold; cursor: pointer; padding: 12px; font-size: 20px;
-            transition: 0.2s;
+            text-transform: uppercase; transition: 0.2s;
         }
         .terminal-btn:hover { background: #00cc55; }
 
-        /* Secret Code Visuals */
+        /* General Instructions List */
+        #game-info {
+            width: 380px; border: 1px solid #00ff66; padding: 20px;
+            color: #00ffcc; text-align: left; font-size: 16px;
+            display: flex; flex-direction: column; gap: 10px;
+            background: rgba(0, 10, 0, 0.8);
+        }
+        .info-header { text-align: center; font-weight: bold; border-bottom: 1px solid #00ffcc; padding-bottom: 8px;}
+
+        /* Score Box in Pause Menu */
+        #score-terminal {
+            width: 380px;
+            text-align: center;
+            border-bottom: 1px solid #00ff66;
+            padding-bottom: 15px;
+        }
+
+        /* Other Secret Overlays */
         #easter-egg {
             position: absolute; width: 100%; height: 100%;
             background: #000 url('Jamper.png') no-repeat center;
@@ -73,12 +100,7 @@
             justify-content: center; align-items: center;
         }
 
-        #tuffVideo { 
-            max-width: 90vw; 
-            max-height: 90vh; 
-            border: 2px solid #00ff66; 
-            box-shadow: 0 0 20px #00ff66;
-        }
+        #tuffVideo { max-width: 90vw; max-height: 90vh; border: 2px solid #00ff66; box-shadow: 0 0 20px #00ff66;}
 
         #tuff-message {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -87,29 +109,11 @@
             display: none; z-index: 5000; box-shadow: 0 0 20px #00ff66;
         }
 
-        /* Gameplay UI */
-        .controls-hint {
-            position: absolute; bottom: 30px; width: 100%; text-align: center;
-            color: #00ffcc; font-size: 16px; text-shadow: 2px 2px #000; 
-            pointer-events: none; display: none; z-index: 100;
-            letter-spacing: 1px;
-        }
-
-        .score-board { 
-            position: absolute; top: 20px; left: 20px; font-size: 28px; 
-            font-weight: bold; color: #00ffcc; display: none; text-shadow: 2px 2px #000; 
-        }
-
-        #countdown-text {
-            position: absolute; font-size: 120px; color: #00ff66;
-            font-weight: bold; display: none; z-index: 2000;
-        }
-
         #retryBtn { 
             display: none; position: absolute; padding: 20px 40px; font-size: 24px; 
-            background: #00ff66; color: #000; border: none; cursor: pointer; 
+            background: #00ffcc; color: #000; border: none; cursor: pointer; 
             top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 600; 
-            font-weight: bold; box-shadow: 0 0 15px #00ff66;
+            font-weight: bold; box-shadow: 0 0 15px #00ffcc;
         }
     </style>
 </head>
@@ -129,20 +133,36 @@
     <div id="easter-egg"></div>
 
     <div id="pause-overlay">
-        <div class="terminal-window">
-            <div style="color:#00ff66; margin-bottom:5px;">ADMIN_MOD_ACTIVE</div>
-            <input type="text" id="adminInput" placeholder="CMD_ROOT..." autofocus autocomplete="off">
-            <button id="resumeBtn" class="terminal-btn">RESUME_PLAY</button>
+        
+        <div id="score-terminal" class="terminal-body">
+            <div>SESSION_SCORE:</div>
+            <div id="session-score-display" style="font-size:40px; color:#fff;">0</div>
         </div>
+
+        <div class="terminal-block">
+            <div class="terminal-header">ADMIN_PANEL</div>
+            <div class="terminal-body">
+                <input type="text" id="adminInput" placeholder="CMD_ROOT..." autofocus autocomplete="off">
+                <button id="resumeBtn" class="terminal-btn">EXECUTE // RESUME</button>
+            </div>
+        </div>
+
+        <div id="game-info">
+            <div class="info-header">GAME_SYSTEM_DIAGNOSTICS</div>
+            <div>STATUS: <span style="color:#00ff66;">ACTIVE</span></div>
+            <div>PLAYER: JAMPER</div>
+            <div>TARGET: LERMA_AND_BOTTLE</div>
+            <br>
+            <div>DIFFICULTY: INFINITE_SCALE</div>
+            <div>- DODGE: WATA_PROJECTILES</div>
+            <div>- ATTACK: [DOWN/S/W] DOVE</div>
+            <div>- MOBILITY: [UP/SPACE] DOUBLE_JUMP</div>
+            <br>
+            <div>[ESC]: TOGGLE_PANEL</div>
+        </div>
+
     </div>
 
-    <div id="countdown-text">3</div>
-
-    <div class="controls-hint" id="controlText">
-        [UP/SPACE] DOUBLE JUMP | [DOWN/S/W] THROW DOVE | [ESC] ADMIN MOD
-    </div>
-
-    <div class="score-board" id="scoreDisplay">SCORE: 0</div>
     <button id="retryBtn" onclick="resetGame()">RETRY?</button>
 
     <canvas id="gameCanvas"></canvas>
@@ -153,7 +173,7 @@ const ctx = canvas.getContext('2d');
 const startBtn = document.getElementById('startBtn');
 const pauseOverlay = document.getElementById('pause-overlay');
 const adminInput = document.getElementById('adminInput');
-const countdownDisplay = document.getElementById('countdown-text');
+const sessionScoreDisplay = document.getElementById('session-score-display');
 
 const images = {};
 const sources = {
@@ -181,8 +201,6 @@ for (let key in sources) {
 startBtn.onclick = () => {
     document.getElementById('loading-screen').style.display = 'none';
     canvas.style.display = 'block';
-    document.getElementById('controlText').style.display = 'block';
-    document.getElementById('scoreDisplay').style.display = 'block';
     resize();
     resetGame();
 };
@@ -193,7 +211,7 @@ function resize() {
 }
 window.addEventListener('resize', resize);
 
-let speed = 8, score = 0, gameOver = false, paused = false, isCountingDown = false;
+let speed = 8, score = 0, gameOver = false, paused = false;
 let tuffJamperUsed = false;
 let projectiles = [], playerProjectiles = [];
 let player = { x: 0, y: 0, w: 75, h: 75, dy: 0, jumps: 0, recoil: 0 };
@@ -204,10 +222,7 @@ function handleCommand() {
     if (val === '67') {
         adminInput.value = '';
         document.getElementById('easter-egg').style.display = 'block';
-        setTimeout(() => { 
-            document.getElementById('easter-egg').style.display = 'none'; 
-            adminInput.focus(); 
-        }, 3000);
+        setTimeout(() => { document.getElementById('easter-egg').style.display = 'none'; adminInput.focus(); }, 3000);
     } 
     else if (val === 'TuffJamper') {
         adminInput.value = '';
@@ -234,14 +249,15 @@ function showPopup(msg, bonus) {
     m.innerText = msg;
     m.style.display = 'block';
     score += bonus;
-    document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
+    sessionScoreDisplay.innerText = score;
     setTimeout(() => { m.style.display = 'none'; adminInput.focus(); }, 2500);
 }
 
 function togglePause() {
-    if (gameOver || isCountingDown || document.getElementById('video-container').style.display === 'flex') return;
+    if (gameOver || document.getElementById('video-container').style.display === 'flex') return;
     if (!paused) {
         paused = true;
+        sessionScoreDisplay.innerText = score; // Set score in pause menu
         pauseOverlay.style.display = 'flex';
         adminInput.focus();
     } else {
@@ -249,20 +265,37 @@ function togglePause() {
     }
 }
 
+// Fixed Countdown Logic for Pause System
 function startCountdown() {
     paused = false;
     pauseOverlay.style.display = 'none';
-    isCountingDown = true;
-    countdownDisplay.style.display = 'block';
+    const originalSpeed = speed; // Save current speed
+    speed = 0; // Freeze gameplay during countdown
+    
+    // Clear projectiles/player physics during countdown if needed
+    
     let count = 3;
-    countdownDisplay.innerText = count;
+    const countCtx = canvas.getContext('2d');
+    
+    function drawCountdown() {
+        if (!gameOver && speed === 0) { // Still counting down
+            draw(); // Draw current frame frozen
+            countCtx.font = "bold 150px Courier New";
+            countCtx.fillStyle = "#00ff66";
+            countCtx.textAlign = "center";
+            countCtx.fillText(count, canvas.width/2, canvas.height/2 + 50);
+        }
+    }
+
+    drawCountdown();
+    
     let timer = setInterval(() => {
         count--;
-        if (count > 0) countdownDisplay.innerText = count;
-        else {
+        if (count > 0) {
+            drawCountdown();
+        } else {
             clearInterval(timer);
-            countdownDisplay.style.display = 'none';
-            isCountingDown = false;
+            speed = originalSpeed; // Restore speed
             update();
         }
     }, 1000);
@@ -273,16 +306,14 @@ adminInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleComma
 
 window.addEventListener('keydown', e => {
     if (e.code === 'Escape') togglePause();
-    if (gameOver || paused || isCountingDown || document.activeElement === adminInput) return;
+    if (gameOver || paused || speed === 0 || document.activeElement === adminInput) return;
     
-    // Double Jump
     if (e.code === 'Space' || e.code === 'ArrowUp') {
         if (player.jumps < 2) {
             player.dy = -16;
             player.jumps++;
         }
     }
-    // Throw
     if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.code === 'KeyW') {
         playerProjectiles.push({ x: player.x, y: player.y + 25, vx: -16 });
         player.recoil = 10;
@@ -300,7 +331,7 @@ function resetGame() {
 }
 
 function update() {
-    if (gameOver || paused || isCountingDown) return;
+    if (gameOver || paused || speed === 0) return;
     const groundY = canvas.height - 100;
     speed += 0.001; 
     player.dy += 0.85;
@@ -335,7 +366,6 @@ function update() {
 
     if (hitFeedback > 0) hitFeedback--;
     score += Math.floor(speed / 8);
-    document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
     draw();
     requestAnimationFrame(update);
 }
@@ -361,6 +391,14 @@ function draw() {
     });
 
     ctx.drawImage(images.player, player.x + player.recoil, player.y, player.w, player.h);
+    
+    // SCORE ONLY IN GAMEPLAY
+    if (!paused && speed !== 0) {
+        ctx.font = "bold 28px Courier New";
+        ctx.fillStyle = "#00ffcc";
+        ctx.textAlign = "left";
+        ctx.fillText(`SCORE: ${score}`, 20, 40);
+    }
 }
 </script>
 </body>
