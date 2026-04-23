@@ -13,7 +13,6 @@
         }
         canvas { display: none; background: #000; } 
         
-        /* Start Screen */
         #loading-screen {
             position: absolute; width: 100%; height: 100%;
             display: flex; flex-direction: column; justify-content: center; align-items: center;
@@ -29,7 +28,7 @@
             box-shadow: 0 0 20px #00ff66;
         }
 
-        /* NEW SEPARATE BUTTON PAUSE LAYOUT */
+        /* PAUSE LAYOUT */
         #pause-overlay {
             position: absolute; width: 100%; height: 100%;
             background: rgba(0, 10, 0, 0.95);
@@ -37,57 +36,52 @@
             z-index: 1000; gap: 40px;
         }
 
-        /* Left Side: Navigation Buttons */
-        .menu-sidebar {
-            display: flex; flex-direction: column; gap: 15px;
-            width: 250px;
-        }
+        .menu-sidebar { display: flex; flex-direction: column; gap: 15px; width: 250px; }
 
         .menu-btn {
             background: #111; border: 2px solid #00ff66; color: #00ff66;
             padding: 15px; font-size: 18px; font-weight: bold;
             text-align: left; cursor: pointer; text-transform: uppercase;
-            transition: 0.3s; position: relative; overflow: hidden;
+            transition: 0.3s;
         }
 
-        .menu-btn:hover {
-            background: #00ff66; color: #000;
-            box-shadow: 0 0 15px #00ff66;
-        }
+        .menu-btn:hover { background: #00ff66; color: #000; box-shadow: 0 0 15px #00ff66; }
+        .menu-btn.active { background: #00ff66; color: #000; }
 
-        .menu-btn.active {
-            background: #00ff66; color: #000;
-        }
-
-        /* Right Side: Content Panels */
         .content-panel {
             width: 450px; height: 350px;
             border: 2px solid #00ff66; background: #000;
-            display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,255,102,0.2);
+            display: flex; flex-direction: column;
         }
 
-        .panel-header {
-            background: #00ff66; color: #000; padding: 10px;
-            font-weight: bold; font-size: 14px; letter-spacing: 1px;
-        }
-
-        .panel-body {
-            padding: 20px; color: #00ff66; flex-grow: 1;
-            display: flex; flex-direction: column; gap: 15px;
-        }
+        .panel-header { background: #00ff66; color: #000; padding: 10px; font-weight: bold; font-size: 14px; }
+        .panel-body { padding: 20px; color: #00ff66; flex-grow: 1; display: flex; flex-direction: column; gap: 15px; }
 
         #adminInput {
             background: #050505; border: 1px solid #00ff66; color: #00ff66;
             padding: 12px; font-size: 18px; outline: none; width: 100%; box-sizing: border-box;
         }
 
-        /* Easter Egg / Video Styling */
+        /* VIDEO CONTAINER */
         #video-container {
             position: absolute; width: 100%; height: 100%;
             background: #000; display: none; z-index: 4000;
             justify-content: center; align-items: center;
         }
-        #tuffVideo { max-width: 90vw; max-height: 90vh; border: 2px solid #00ff66; }
+        
+        /* The Shield prevents any clicks from reaching the video */
+        #video-shield {
+            position: absolute;
+            width: 100%; height: 100%;
+            z-index: 4001;
+            cursor: default;
+        }
+
+        #tuffVideo { 
+            max-width: 90vw; 
+            max-height: 90vh; 
+            border: 2px solid #00ff66; 
+        }
 
         #tuff-message {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -97,24 +91,21 @@
         }
     </style>
 </head>
-<body>
-
-    <div id="loading-screen">
+<body oncontextmenu="return false;"> <div id="loading-screen">
         <div id="percent-text" style="color:#00ffcc; font-size:80px;">0%</div>
         <button id="startBtn">PLAY GAME</button>
     </div>
 
     <div id="video-container">
-        <video id="tuffVideo" src="Jandel.mp4"></video>
+        <div id="video-shield"></div>
+        <video id="tuffVideo" src="Jandel.mp4" playsinline disablePictureInPicture></video>
     </div>
     
     <div id="tuff-message"></div>
     <div id="easter-egg" style="display:none; position:absolute; width:100%; height:100%; background:#000 url('Jamper.png') no-repeat center; background-size:contain; z-index:3000;"></div>
 
     <div id="pause-overlay">
-        
         <div class="menu-sidebar">
-            <div style="color: #00ff66; font-size: 12px; margin-bottom: 10px;">SYSTEM_V.1.0</div>
             <button class="menu-btn" onclick="handleCommand()">Resume Game</button>
             <button class="menu-btn active">Admin Console</button>
             <button class="menu-btn" onclick="location.reload()">Reset Session</button>
@@ -128,18 +119,12 @@
             <div class="panel-body">
                 <p style="font-size: 13px; margin: 0;">Enter authorization codes or admin cheats below:</p>
                 <input type="text" id="adminInput" placeholder="READY FOR INPUT..." autofocus autocomplete="off">
-                <div style="font-size: 12px; color: #008844; line-height: 1.5;">
-                    > [UP/SPACE] Jump (x2)<br>
-                    > [S/W/DOWN] Dove Throw<br>
-                    > [ESC] Toggle Menu
-                </div>
                 <button class="menu-btn" style="text-align: center; margin-top: auto;" onclick="handleCommand()">Execute CMD</button>
             </div>
         </div>
-
     </div>
 
-    <button id="retryBtn" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); padding:20px 40px; background:#00ff66; font-weight:bold; cursor:pointer;" onclick="resetGame()">RETRY?</button>
+    <button id="retryBtn" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); padding:20px 40px; background:#00ff66; font-weight:bold; cursor:pointer; z-index:600;" onclick="resetGame()">RETRY?</button>
 
     <canvas id="gameCanvas"></canvas>
 
@@ -150,6 +135,17 @@ const startBtn = document.getElementById('startBtn');
 const pauseOverlay = document.getElementById('pause-overlay');
 const adminInput = document.getElementById('adminInput');
 const sessionScoreDisplay = document.getElementById('session-score-display');
+const videoContainer = document.getElementById('video-container');
+const tuffVideo = document.getElementById('tuffVideo');
+
+// Disable keyboard shortcuts for inspecting/pausing (F12, Ctrl+Shift+I, Space)
+window.addEventListener('keydown', e => {
+    if (isVideoPlaying) {
+        if (e.code === 'Space' || e.key === ' ' || e.code === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+            e.preventDefault();
+        }
+    }
+});
 
 const images = {};
 const sources = { player: 'Jamper.png', enemy: 'Lerma.png', dove: 'dove.png', bottle: 'bottle.png', wata: 'wata.png', bg: 'Brixk.png' };
@@ -169,7 +165,7 @@ startBtn.onclick = () => { document.getElementById('loading-screen').style.displ
 window.addEventListener('resize', resize);
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 
-let speed = 8, score = 0, gameOver = false, paused = false, tuffJamperUsed = false;
+let speed = 8, score = 0, gameOver = false, paused = false, tuffJamperUsed = false, isVideoPlaying = false;
 let projectiles = [], playerProjectiles = [];
 let player = { x: 0, y: 0, w: 75, h: 75, dy: 0, jumps: 0, recoil: 0 };
 let bgScroll = 0, spawnTimer = 0, hitFeedback = 0;
@@ -185,12 +181,15 @@ function handleCommand() {
         adminInput.value = '';
         if (!tuffJamperUsed) {
             tuffJamperUsed = true;
+            isVideoPlaying = true;
             pauseOverlay.style.display = 'none';
-            document.getElementById('video-container').style.display = 'flex';
-            const vid = document.getElementById('tuffVideo');
-            vid.play();
-            vid.onended = () => {
-                document.getElementById('video-container').style.display = 'none';
+            videoContainer.style.display = 'flex';
+            tuffVideo.currentTime = 0;
+            tuffVideo.play();
+            
+            tuffVideo.onended = () => {
+                isVideoPlaying = false;
+                videoContainer.style.display = 'none';
                 pauseOverlay.style.display = 'flex';
                 showPopup("YOU GET +1500 FOR BEING TUFF JAMPER", 1500);
             };
@@ -207,7 +206,7 @@ function showPopup(msg, bonus) {
 }
 
 function togglePause() {
-    if (gameOver || document.getElementById('video-container').style.display === 'flex') return;
+    if (gameOver || isVideoPlaying) return; 
     if (!paused) {
         paused = true;
         sessionScoreDisplay.innerText = score;
@@ -229,20 +228,20 @@ function startCountdown() {
 adminInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleCommand(); });
 window.addEventListener('keydown', e => {
     if (e.code === 'Escape') togglePause();
-    if (gameOver || paused || speed === 0 || document.activeElement === adminInput) return;
+    if (gameOver || paused || speed === 0 || isVideoPlaying || document.activeElement === adminInput) return;
     if ((e.code === 'Space' || e.code === 'ArrowUp') && player.jumps < 2) { player.dy = -16; player.jumps++; }
     if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.code === 'KeyW') { playerProjectiles.push({ x: player.x, y: player.y + 25, vx: -16 }); player.recoil = 10; }
 });
 
 function resetGame() {
-    score = 0; speed = 8; gameOver = false; paused = false; projectiles = []; playerProjectiles = [];
+    score = 0; speed = 8; gameOver = false; paused = false; isVideoPlaying = false; projectiles = []; playerProjectiles = [];
     player.x = canvas.width - 160; player.y = canvas.height - 180; player.dy = 0; player.jumps = 0;
     document.getElementById('retryBtn').style.display = 'none';
     update();
 }
 
 function update() {
-    if (gameOver || paused || speed === 0) return;
+    if (gameOver || paused || speed === 0 || isVideoPlaying) return;
     const groundY = canvas.height - 100;
     speed += 0.001; player.dy += 0.85; player.y += player.dy;
     if (player.y > groundY - player.h) { player.y = groundY - player.h; player.dy = 0; player.jumps = 0; }
@@ -277,7 +276,7 @@ function draw() {
     playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
     projectiles.forEach(p => ctx.drawImage(images.wata, p.x, p.y, 55, 55));
     ctx.drawImage(images.player, player.x + player.recoil, player.y, player.w, player.h);
-    if (!paused && speed !== 0) { ctx.font = "bold 28px Courier New"; ctx.fillStyle = "#00ffcc"; ctx.fillText(`SCORE: ${score}`, 20, 40); }
+    if (!paused && speed !== 0 && !isVideoPlaying) { ctx.font = "bold 28px Courier New"; ctx.fillStyle = "#00ffcc"; ctx.fillText(`SCORE: ${score}`, 20, 40); }
 }
 </script>
 </body>
