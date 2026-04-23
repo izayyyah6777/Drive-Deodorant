@@ -3,68 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>drive deodorant</title>
+    <title>drive deodorant🍦🍾</title>
     <link rel="icon" type="image/png" href="Jamper.png">
-
     <style>
-        body, html { 
-            margin: 0; padding: 0; width: 100%; height: 100%; 
-            overflow: hidden; background: #000; 
-            font-family: 'Courier New', Courier, monospace;
-            display: flex; justify-content: center; align-items: center;
-        }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; }
         canvas { display: none; background: #000; } 
         
-        #loading-screen {
-            position: absolute; width: 100%; height: 100%;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            background: #000 url('Jamper.png') no-repeat center;
-            background-size: contain; z-index: 500;
+        /* THE ERROR SCREEN - This pops up if files are missing */
+        #error-screen { 
+            position: absolute; width: 100%; height: 100%; background: #000; 
+            color: #ff4444; display: none; flex-direction: column; 
+            justify-content: center; align-items: center; text-align: center; 
+            padding: 40px; z-index: 10000; border: 10px solid #ff4444; box-sizing: border-box;
         }
 
-        #startBtn {
-            margin-top: 20px; padding: 20px 60px;
-            background: #00ff66; color: #000; border: none;
-            font-weight: bold; cursor: pointer; border-radius: 5px;
-            font-size: 28px; text-transform: uppercase;
-            box-shadow: 0 0 20px #00ff66;
-        }
-
-        /* Sidebar UI */
-        #pause-overlay {
-            position: absolute; width: 100%; height: 100%;
-            background: rgba(0, 10, 0, 0.95);
-            display: none; justify-content: center; align-items: center;
-            z-index: 1000; gap: 40px;
-        }
-
+        #loading-screen { position: absolute; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: #000 url('Jamper.png') no-repeat center; background-size: contain; z-index: 500; }
+        #startBtn { margin-top: 20px; padding: 20px 60px; background: #00ff66; color: #000; border: none; font-weight: bold; cursor: pointer; border-radius: 5px; font-size: 28px; text-transform: uppercase; box-shadow: 0 0 20px #00ff66; }
+        #pause-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 10, 0, 0.95); display: none; justify-content: center; align-items: center; z-index: 1000; gap: 40px; }
         .menu-sidebar { display: flex; flex-direction: column; gap: 15px; width: 250px; }
-        .menu-btn {
-            background: #111; border: 2px solid #00ff66; color: #00ff66;
-            padding: 15px; font-size: 18px; font-weight: bold;
-            text-align: left; cursor: pointer; text-transform: uppercase;
-        }
-        .menu-btn:hover { background: #00ff66; color: #000; }
-
+        .menu-btn { background: #111; border: 2px solid #00ff66; color: #00ff66; padding: 15px; font-size: 18px; font-weight: bold; text-align: left; cursor: pointer; text-transform: uppercase; }
         .content-panel { width: 450px; height: 350px; border: 2px solid #00ff66; background: #000; display: flex; flex-direction: column; }
         .panel-header { background: #00ff66; color: #000; padding: 10px; font-weight: bold; }
         .panel-body { padding: 20px; color: #00ff66; flex-grow: 1; display: flex; flex-direction: column; gap: 15px; }
-
         #adminInput { background: #050505; border: 1px solid #00ff66; color: #00ff66; padding: 12px; font-size: 18px; outline: none; width: 100%; box-sizing: border-box; }
-
-        /* Video System */
         #video-container { position: absolute; width: 100%; height: 100%; background: #000; display: none; z-index: 4000; justify-content: center; align-items: center; }
         #video-shield { position: absolute; width: 100%; height: 100%; z-index: 4001; }
         #tuffVideo { max-width: 90vw; max-height: 90vh; border: 2px solid #00ff66; pointer-events: none; }
-
-        #tuff-message {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            color: #00ff66; font-size: 24px; font-weight: bold; text-align: center;
-            background: #000; padding: 25px; border: 2px solid #00ff66; display: none; z-index: 5000;
-        }
+        #tuff-message { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #00ff66; font-size: 24px; font-weight: bold; text-align: center; background: #000; padding: 25px; border: 2px solid #00ff66; display: none; z-index: 5000; }
+        #retryBtn { display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); padding:20px 40px; background:#00ff66; font-weight:bold; cursor:pointer; z-index:600; }
     </style>
 </head>
 <body oncontextmenu="return false;">
+
+    <div id="error-screen">
+        <h1 style="font-size: 50px; margin-bottom: 20px;">FILE NOT FOUND</h1>
+        <p id="error-msg" style="font-size: 22px; max-width: 900px; line-height: 1.5; font-weight: bold;"></p>
+    </div>
 
     <div id="loading-screen"><button id="startBtn">PLAY GAME</button></div>
 
@@ -91,90 +65,89 @@
         </div>
     </div>
 
-    <button id="retryBtn" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); padding:20px 40px; background:#00ff66; font-weight:bold; cursor:pointer; z-index:600;" onclick="resetGame()">RETRY?</button>
-
+    <button id="retryBtn" onclick="resetGame()">RETRY?</button>
     <canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startBtn = document.getElementById('startBtn');
-const pauseOverlay = document.getElementById('pause-overlay');
-const adminInput = document.getElementById('adminInput');
-const sessionScoreDisplay = document.getElementById('session-score-display');
-const videoContainer = document.getElementById('video-container');
+const errorScreen = document.getElementById('error-screen');
+const errorMsg = document.getElementById('error-msg');
 const tuffVideo = document.getElementById('tuffVideo');
 
-let speed = 8, score = 0, gameOver = false, paused = false, isVideoPlaying = false;
-let flightEnabled = false;
-let projectiles = [], playerProjectiles = [];
-let player = { x: 0, y: 0, w: 75, h: 75, dy: 0, jumps: 0, recoil: 0 };
-let bgScroll = 0, spawnTimer = 0, hitFeedback = 0;
+let hasFatalError = false;
+
+// THE ERROR TRIGGER
+function triggerFileError(fileName) {
+    hasFatalError = true;
+    errorScreen.style.display = 'flex';
+    document.getElementById('loading-screen').style.display = 'none';
+    canvas.style.display = 'none';
+    
+    // YOUR MESSAGE
+    errorMsg.innerText = `the file (${fileName}) is no where to be found on your Computer/PC Because of this the game has been unplayable please check in with izayah by @Izayyah_thedev on tt i should have a pfp of a bottle,if not you might have to wait for files to load if you have it in the zip`;
+}
 
 const images = {};
 const sources = { player: 'Jamper.png', enemy: 'Lerma.png', dove: 'dove.png', bottle: 'bottle.png', wata: 'wata.png', bg: 'Brixk.png' };
-for (let key in sources) { images[key] = new Image(); images[key].src = sources[key]; }
 
-// MEDIA LOCK: Overwrite system behavior to block pausing
+// LOADING IMAGES
+for (let key in sources) {
+    images[key] = new Image();
+    images[key].onerror = () => { triggerFileError(sources[key]); };
+    images[key].src = sources[key];
+}
+
+// LOADING VIDEO
+tuffVideo.onerror = () => { triggerFileError("Jandel.mp4"); };
+
+// REST OF GAME LOGIC
+let speed = 8, score = 0, gameOver = false, paused = false, isVideoPlaying = false, flightEnabled = false;
+let projectiles = [], playerProjectiles = [], player = { x: 0, y: 0, w: 75, h: 75, dy: 0, jumps: 0, recoil: 0 };
+let bgScroll = 0, spawnTimer = 0, hitFeedback = 0;
+
 if ('mediaSession' in navigator) {
-    navigator.mediaSession.setActionHandler('pause', () => { 
-        if(isVideoPlaying) tuffVideo.play(); // Force play if system tries to pause
-    });
+    navigator.mediaSession.setActionHandler('pause', () => { if(isVideoPlaying) tuffVideo.play(); });
 }
 
 function handleCommand() {
     const val = adminInput.value.trim();
     const groundY = canvas.height - 100;
-
     if (val === 'Admin Mode On') {
         flightEnabled = true;
         document.getElementById('status-line').innerText = "FLIGHT_MOD: ACTIVE";
-        showPopup("FLIGHT ENABLED", 0);
         adminInput.value = '';
-    } 
-    else if (val === 'Admin Mode Off') {
+    } else if (val === 'Admin Mode Off') {
         flightEnabled = false;
-        player.dy = 0;
-        player.y = groundY - player.h; // Instant snap back to ground
+        player.dy = 0; player.y = groundY - player.h;
         document.getElementById('status-line').innerText = "FLIGHT_MOD: INACTIVE";
-        showPopup("FLIGHT DISABLED // RETURNING TO POST", 0);
         adminInput.value = '';
-    }
-    else if (val === 'TuffJamper') {
-        adminInput.value = '';
-        isVideoPlaying = true;
-        pauseOverlay.style.display = 'none';
-        videoContainer.style.display = 'flex';
+    } else if (val === 'TuffJamper') {
+        adminInput.value = ''; isVideoPlaying = true;
+        document.getElementById('pause-overlay').style.display = 'none';
+        document.getElementById('video-container').style.display = 'flex';
         tuffVideo.play();
         tuffVideo.onended = () => {
             isVideoPlaying = false;
-            videoContainer.style.display = 'none';
-            pauseOverlay.style.display = 'flex';
-            showPopup("BONUS: +1500", 1500);
+            document.getElementById('video-container').style.display = 'none';
+            document.getElementById('pause-overlay').style.display = 'flex';
         };
     } else { startCountdown(); }
 }
 
-function showPopup(msg, bonus) {
-    const m = document.getElementById('tuff-message');
-    m.innerText = msg; m.style.display = 'block';
-    score += bonus;
-    setTimeout(() => { m.style.display = 'none'; adminInput.focus(); }, 2000);
-}
-
 function togglePause() {
-    if (gameOver || isVideoPlaying) return;
+    if (gameOver || isVideoPlaying || hasFatalError) return;
     if (!paused) {
         paused = true;
-        sessionScoreDisplay.innerText = score;
-        pauseOverlay.style.display = 'flex';
-        adminInput.focus();
+        document.getElementById('pause-overlay').style.display = 'flex';
+        document.getElementById('adminInput').focus();
     } else { handleCommand(); }
 }
 
 function startCountdown() {
-    paused = false; pauseOverlay.style.display = 'none';
-    const originalSpeed = speed; speed = 0;
+    paused = false; document.getElementById('pause-overlay').style.display = 'none';
+    const originalSpeed = speed || 8; speed = 0;
     let count = 3;
     let timer = setInterval(() => {
         count--;
@@ -184,72 +157,56 @@ function startCountdown() {
 
 window.addEventListener('keydown', e => {
     if (e.code === 'Escape') togglePause();
-    if (gameOver || paused || speed === 0 || isVideoPlaying) return;
-    
+    if (gameOver || paused || isVideoPlaying || hasFatalError) return;
     if (flightEnabled) {
         if (e.code === 'Space' || e.code === 'ArrowUp') player.dy = -10;
         if (e.code === 'ArrowDown' || e.code === 'KeyS') player.dy = 10;
     } else {
         if ((e.code === 'Space' || e.code === 'ArrowUp') && player.jumps < 2) { player.dy = -16; player.jumps++; }
     }
-    
-    if (e.code === 'KeyW') {
+    if (e.code === 'KeyW' || e.code === 'KeyS' || e.code === 'ArrowDown') {
         playerProjectiles.push({ x: player.x, y: player.y + 25, vx: -16 });
-        player.recoil = 10;
     }
 });
 
-startBtn.onclick = () => { document.getElementById('loading-screen').style.display = 'none'; canvas.style.display = 'block'; resize(); resetGame(); };
+startBtn.onclick = () => {
+    if (hasFatalError) return;
+    document.getElementById('loading-screen').style.display = 'none';
+    canvas.style.display = 'block';
+    resize();
+    resetGame();
+};
+
 window.addEventListener('resize', resize);
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 
 function resetGame() {
     score = 0; speed = 8; gameOver = false; paused = false; projectiles = []; playerProjectiles = [];
-    player.x = canvas.width - 160; player.y = canvas.height - 180; player.dy = 0; player.jumps = 0;
-    document.getElementById('retryBtn').style.display = 'none';
+    player.x = canvas.width - 160; player.y = canvas.height - 180; player.dy = 0;
     update();
 }
 
 function update() {
-    if (gameOver || paused || speed === 0 || isVideoPlaying) return;
+    if (gameOver || paused || isVideoPlaying || hasFatalError) return;
     const groundY = canvas.height - 100;
-    
-    if (flightEnabled) {
-        player.dy *= 0.92; // Smooth air friction
-    } else {
-        player.dy += 0.85; // Gravity
-    }
-    
+    if (flightEnabled) player.dy *= 0.92; else player.dy += 0.85;
     player.y += player.dy;
-
-    // Boundary Logic
-    if (player.y > groundY - player.h) { 
-        player.y = groundY - player.h; 
-        player.dy = 0; 
-        player.jumps = 0; 
-    }
-    if (player.y < 0) { player.y = 0; player.dy = 0; }
-    
-    if (player.recoil > 0) player.recoil--;
+    if (player.y > groundY - player.h) { player.y = groundY - player.h; player.dy = 0; player.jumps = 0; }
     bgScroll -= speed; spawnTimer++;
-    
-    if (spawnTimer > (60 / (speed/8)) + Math.random() * 40) { projectiles.push({ x: -50, y: groundY - 55, vx: speed + 4 }); spawnTimer = 0; }
-
+    if (spawnTimer > 60) { projectiles.push({ x: -50, y: groundY - 55, vx: speed + 4 }); spawnTimer = 0; }
     projectiles.forEach((p, i) => {
         p.x += p.vx;
         if (p.x < player.x + player.w - 20 && p.x + 40 > player.x + 20 && p.y < player.y + player.h && p.y + 40 > player.y) {
             gameOver = true; document.getElementById('retryBtn').style.display = 'block';
         }
     });
-
     playerProjectiles.forEach((dp, j) => {
         dp.x += dp.vx;
-        if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) { score += 500; hitFeedback = 10; playerProjectiles.splice(j, 1); }
+        if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) { score += 500; playerProjectiles.splice(j, 1); }
     });
-
-    if (hitFeedback > 0) hitFeedback--;
-    score += Math.floor(speed / 8);
-    draw(); requestAnimationFrame(update);
+    score += 1;
+    draw();
+    requestAnimationFrame(update);
 }
 
 function draw() {
@@ -257,28 +214,17 @@ function draw() {
     const bgW = images.bg.width || 100;
     const shiftX = bgScroll % bgW;
     for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) ctx.drawImage(images.bg, x, 0, bgW, canvas.height);
-    
     const groundY = canvas.height - 100;
     ctx.drawImage(images.enemy, 30, groundY - 130, 130, 130);
     ctx.drawImage(images.bottle, 160, groundY - 70, 50, 50);
-
     playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
-    
     projectiles.forEach(p => {
-        ctx.save();
-        ctx.shadowBlur = 15;
-        ctx.shadowColor = "rgba(0, 255, 204, 0.8)"; 
+        ctx.save(); ctx.shadowBlur = 15; ctx.shadowColor = "cyan"; 
         ctx.drawImage(images.wata, p.x, p.y, 55, 55);
         ctx.restore();
     });
-
-    ctx.drawImage(images.player, player.x + player.recoil, player.y, player.w, player.h);
-    if (!paused && !isVideoPlaying) { 
-        ctx.font = "bold 28px Courier New"; 
-        ctx.fillStyle = "#00ffcc"; 
-        ctx.fillText(`SCORE: ${score}`, 20, 40); 
-        if(flightEnabled) ctx.fillText("FLIGHT: ON", 20, 75);
-    }
+    ctx.drawImage(images.player, player.x, player.y, player.w, player.h);
+    ctx.font = "bold 28px Courier New"; ctx.fillStyle = "#00ff66"; ctx.fillText(`SCORE: ${score}`, 20, 40); 
 }
 </script>
 </body>
