@@ -200,4 +200,86 @@ window.addEventListener('keydown', e => {
 });
 
 startBtn.onclick = () => { document.getElementById('loading-screen').style.display = 'none'; canvas.style.display = 'block'; resize(); resetGame(); };
-window.addEventListener('resize
+window.addEventListener('resize', resize);
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+
+function resetGame() {
+    score = 0; speed = 8; gameOver = false; paused = false; projectiles = []; playerProjectiles = [];
+    player.x = canvas.width - 160; player.y = canvas.height - 180; player.dy = 0; player.jumps = 0;
+    document.getElementById('retryBtn').style.display = 'none';
+    update();
+}
+
+function update() {
+    if (gameOver || paused || speed === 0 || isVideoPlaying) return;
+    const groundY = canvas.height - 100;
+    
+    if (flightEnabled) {
+        player.dy *= 0.92; // Smooth air friction
+    } else {
+        player.dy += 0.85; // Gravity
+    }
+    
+    player.y += player.dy;
+
+    // Boundary Logic
+    if (player.y > groundY - player.h) { 
+        player.y = groundY - player.h; 
+        player.dy = 0; 
+        player.jumps = 0; 
+    }
+    if (player.y < 0) { player.y = 0; player.dy = 0; }
+    
+    if (player.recoil > 0) player.recoil--;
+    bgScroll -= speed; spawnTimer++;
+    
+    if (spawnTimer > (60 / (speed/8)) + Math.random() * 40) { projectiles.push({ x: -50, y: groundY - 55, vx: speed + 4 }); spawnTimer = 0; }
+
+    projectiles.forEach((p, i) => {
+        p.x += p.vx;
+        if (p.x < player.x + player.w - 20 && p.x + 40 > player.x + 20 && p.y < player.y + player.h && p.y + 40 > player.y) {
+            gameOver = true; document.getElementById('retryBtn').style.display = 'block';
+        }
+    });
+
+    playerProjectiles.forEach((dp, j) => {
+        dp.x += dp.vx;
+        if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) { score += 500; hitFeedback = 10; playerProjectiles.splice(j, 1); }
+    });
+
+    if (hitFeedback > 0) hitFeedback--;
+    score += Math.floor(speed / 8);
+    draw(); requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const bgW = images.bg.width || 100;
+    const shiftX = bgScroll % bgW;
+    for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) ctx.drawImage(images.bg, x, 0, bgW, canvas.height);
+    
+    const groundY = canvas.height - 100;
+    ctx.drawImage(images.enemy, 30, groundY - 130, 130, 130);
+    ctx.drawImage(images.bottle, 160, groundY - 70, 50, 50);
+
+    playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
+    
+    projectiles.forEach(p => {
+        ctx.save();
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = "rgba(0, 255, 204, 0.8)"; 
+        ctx.drawImage(images.wata, p.x, p.y, 55, 55);
+        ctx.restore();
+    });
+
+    ctx.drawImage(images.player, player.x + player.recoil, player.y, player.w, player.h);
+    if (!paused && !isVideoPlaying) { 
+        ctx.font = "bold 28px Courier New"; 
+        ctx.fillStyle = "#00ffcc"; 
+        ctx.fillText(`SCORE: ${score}`, 20, 40); 
+        if(flightEnabled) ctx.fillText("FLIGHT: ON", 20, 75);
+    }
+}
+</script>
+</body>
+</html>
