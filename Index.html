@@ -21,11 +21,6 @@
             background-size: contain; z-index: 500;
         }
 
-        #percent-text {
-            font-size: 80px; font-weight: bold; color: #00ffcc;
-            text-shadow: 0 0 20px #000;
-        }
-
         #startBtn {
             display: none; margin-top: 20px; padding: 20px 60px;
             background: #00ff66; color: #000; border: none;
@@ -34,93 +29,78 @@
             box-shadow: 0 0 20px #00ff66;
         }
 
-        /* FAMILIAR PAUSE SCREEN */
+        /* NEW SEPARATE BUTTON PAUSE LAYOUT */
         #pause-overlay {
             position: absolute; width: 100%; height: 100%;
-            background: rgba(0, 15, 0, 0.9);
-            display: none; flex-direction: column; justify-content: center; align-items: center;
-            z-index: 1000; gap: 30px;
+            background: rgba(0, 10, 0, 0.95);
+            display: none; justify-content: center; align-items: center;
+            z-index: 1000; gap: 40px;
         }
 
-        .terminal-block {
-            border: 3px solid #00ff66; background: #000;
-            width: 380px; text-align: center;
-            box-shadow: 0 0 25px #00ff66;
+        /* Left Side: Navigation Buttons */
+        .menu-sidebar {
+            display: flex; flex-direction: column; gap: 15px;
+            width: 250px;
         }
 
-        .terminal-header {
-            color: #000; background: #00ff66;
-            font-weight: bold; padding: 10px; font-size: 20px;
-            text-transform: uppercase; letter-spacing: 2px;
+        .menu-btn {
+            background: #111; border: 2px solid #00ff66; color: #00ff66;
+            padding: 15px; font-size: 18px; font-weight: bold;
+            text-align: left; cursor: pointer; text-transform: uppercase;
+            transition: 0.3s; position: relative; overflow: hidden;
         }
 
-        .terminal-body {
-            color: #00ff66; padding: 20px; display: flex; flex-direction: column; gap: 15px;
+        .menu-btn:hover {
+            background: #00ff66; color: #000;
+            box-shadow: 0 0 15px #00ff66;
+        }
+
+        .menu-btn.active {
+            background: #00ff66; color: #000;
+        }
+
+        /* Right Side: Content Panels */
+        .content-panel {
+            width: 450px; height: 350px;
+            border: 2px solid #00ff66; background: #000;
+            display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0,255,102,0.2);
+        }
+
+        .panel-header {
+            background: #00ff66; color: #000; padding: 10px;
+            font-weight: bold; font-size: 14px; letter-spacing: 1px;
+        }
+
+        .panel-body {
+            padding: 20px; color: #00ff66; flex-grow: 1;
+            display: flex; flex-direction: column; gap: 15px;
         }
 
         #adminInput {
-            background: #001100; border: 1px solid #00ff66; color: #00ff66;
-            padding: 12px; font-size: 18px; outline: none; text-align: center;
+            background: #050505; border: 1px solid #00ff66; color: #00ff66;
+            padding: 12px; font-size: 18px; outline: none; width: 100%; box-sizing: border-box;
         }
 
-        .terminal-btn {
-            background: #00ff66; color: #000; border: none;
-            font-weight: bold; cursor: pointer; padding: 12px; font-size: 20px;
-            text-transform: uppercase; transition: 0.2s;
-        }
-        .terminal-btn:hover { background: #00cc55; }
-
-        /* General Instructions List */
-        #game-info {
-            width: 380px; border: 1px solid #00ff66; padding: 20px;
-            color: #00ffcc; text-align: left; font-size: 16px;
-            display: flex; flex-direction: column; gap: 10px;
-            background: rgba(0, 10, 0, 0.8);
-        }
-        .info-header { text-align: center; font-weight: bold; border-bottom: 1px solid #00ffcc; padding-bottom: 8px;}
-
-        /* Score Box in Pause Menu */
-        #score-terminal {
-            width: 380px;
-            text-align: center;
-            border-bottom: 1px solid #00ff66;
-            padding-bottom: 15px;
-        }
-
-        /* Other Secret Overlays */
-        #easter-egg {
-            position: absolute; width: 100%; height: 100%;
-            background: #000 url('Jamper.png') no-repeat center;
-            background-size: contain; display: none; z-index: 3000;
-        }
-
+        /* Easter Egg / Video Styling */
         #video-container {
             position: absolute; width: 100%; height: 100%;
             background: #000; display: none; z-index: 4000;
             justify-content: center; align-items: center;
         }
-
-        #tuffVideo { max-width: 90vw; max-height: 90vh; border: 2px solid #00ff66; box-shadow: 0 0 20px #00ff66;}
+        #tuffVideo { max-width: 90vw; max-height: 90vh; border: 2px solid #00ff66; }
 
         #tuff-message {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
             color: #00ff66; font-size: 24px; font-weight: bold; text-align: center;
             background: #000; padding: 25px; border: 2px solid #00ff66;
-            display: none; z-index: 5000; box-shadow: 0 0 20px #00ff66;
-        }
-
-        #retryBtn { 
-            display: none; position: absolute; padding: 20px 40px; font-size: 24px; 
-            background: #00ffcc; color: #000; border: none; cursor: pointer; 
-            top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 600; 
-            font-weight: bold; box-shadow: 0 0 15px #00ffcc;
+            display: none; z-index: 5000;
         }
     </style>
 </head>
 <body>
 
     <div id="loading-screen">
-        <div id="percent-text">0%</div>
+        <div id="percent-text" style="color:#00ffcc; font-size:80px;">0%</div>
         <button id="startBtn">PLAY GAME</button>
     </div>
 
@@ -128,42 +108,38 @@
         <video id="tuffVideo" src="Jandel.mp4"></video>
     </div>
     
-    <div id="tuff-message">ERROR: ROOT_MESSAGE_NULL</div>
-
-    <div id="easter-egg"></div>
+    <div id="tuff-message"></div>
+    <div id="easter-egg" style="display:none; position:absolute; width:100%; height:100%; background:#000 url('Jamper.png') no-repeat center; background-size:contain; z-index:3000;"></div>
 
     <div id="pause-overlay">
         
-        <div id="score-terminal" class="terminal-body">
-            <div>SESSION_SCORE:</div>
-            <div id="session-score-display" style="font-size:40px; color:#fff;">0</div>
-        </div>
-
-        <div class="terminal-block">
-            <div class="terminal-header">ADMIN_PANEL</div>
-            <div class="terminal-body">
-                <input type="text" id="adminInput" placeholder="CMD_ROOT..." autofocus autocomplete="off">
-                <button id="resumeBtn" class="terminal-btn">EXECUTE // RESUME</button>
+        <div class="menu-sidebar">
+            <div style="color: #00ff66; font-size: 12px; margin-bottom: 10px;">SYSTEM_V.1.0</div>
+            <button class="menu-btn" onclick="handleCommand()">Resume Game</button>
+            <button class="menu-btn active">Admin Console</button>
+            <button class="menu-btn" onclick="location.reload()">Reset Session</button>
+            <div style="margin-top: 20px; color: #008844; font-size: 11px;">
+                SESSION_SCORE: <span id="session-score-display">0</span>
             </div>
         </div>
 
-        <div id="game-info">
-            <div class="info-header">GAME_SYSTEM_DIAGNOSTICS</div>
-            <div>STATUS: <span style="color:#00ff66;">ACTIVE</span></div>
-            <div>PLAYER: JAMPER</div>
-            <div>TARGET: LERMA_AND_BOTTLE</div>
-            <br>
-            <div>DIFFICULTY: INFINITE_SCALE</div>
-            <div>- DODGE: WATA_PROJECTILES</div>
-            <div>- ATTACK: [DOWN/S/W] DOVE</div>
-            <div>- MOBILITY: [UP/SPACE] DOUBLE_JUMP</div>
-            <br>
-            <div>[ESC]: TOGGLE_PANEL</div>
+        <div class="content-panel">
+            <div class="panel-header">COMMAND_TERMINAL_ROOT</div>
+            <div class="panel-body">
+                <p style="font-size: 13px; margin: 0;">Enter authorization codes or admin cheats below:</p>
+                <input type="text" id="adminInput" placeholder="READY FOR INPUT..." autofocus autocomplete="off">
+                <div style="font-size: 12px; color: #008844; line-height: 1.5;">
+                    > [UP/SPACE] Jump (x2)<br>
+                    > [S/W/DOWN] Dove Throw<br>
+                    > [ESC] Toggle Menu
+                </div>
+                <button class="menu-btn" style="text-align: center; margin-top: auto;" onclick="handleCommand()">Execute CMD</button>
+            </div>
         </div>
 
     </div>
 
-    <button id="retryBtn" onclick="resetGame()">RETRY?</button>
+    <button id="retryBtn" style="display:none; position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); padding:20px 40px; background:#00ff66; font-weight:bold; cursor:pointer;" onclick="resetGame()">RETRY?</button>
 
     <canvas id="gameCanvas"></canvas>
 
@@ -176,21 +152,12 @@ const adminInput = document.getElementById('adminInput');
 const sessionScoreDisplay = document.getElementById('session-score-display');
 
 const images = {};
-const sources = {
-    player: 'Jamper.png',
-    enemy: 'Lerma.png',
-    dove: 'dove.png',
-    bottle: 'bottle.png',
-    wata: 'wata.png',
-    bg: 'Brixk.png'
-};
-
+const sources = { player: 'Jamper.png', enemy: 'Lerma.png', dove: 'dove.png', bottle: 'bottle.png', wata: 'wata.png', bg: 'Brixk.png' };
 let loadedCount = 0;
 const totalImages = Object.keys(sources).length;
 
 for (let key in sources) {
-    images[key] = new Image();
-    images[key].src = sources[key];
+    images[key] = new Image(); images[key].src = sources[key];
     images[key].onload = () => {
         loadedCount++;
         document.getElementById('percent-text').innerText = Math.floor((loadedCount/totalImages)*100) + "%";
@@ -198,21 +165,11 @@ for (let key in sources) {
     };
 }
 
-startBtn.onclick = () => {
-    document.getElementById('loading-screen').style.display = 'none';
-    canvas.style.display = 'block';
-    resize();
-    resetGame();
-};
-
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
+startBtn.onclick = () => { document.getElementById('loading-screen').style.display = 'none'; canvas.style.display = 'block'; resize(); resetGame(); };
 window.addEventListener('resize', resize);
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 
-let speed = 8, score = 0, gameOver = false, paused = false;
-let tuffJamperUsed = false;
+let speed = 8, score = 0, gameOver = false, paused = false, tuffJamperUsed = false;
 let projectiles = [], playerProjectiles = [];
 let player = { x: 0, y: 0, w: 75, h: 75, dy: 0, jumps: 0, recoil: 0 };
 let bgScroll = 0, spawnTimer = 0, hitFeedback = 0;
@@ -237,19 +194,15 @@ function handleCommand() {
                 pauseOverlay.style.display = 'flex';
                 showPopup("YOU GET +1500 FOR BEING TUFF JAMPER", 1500);
             };
-        } else {
-            showPopup("bro are we fr", 0);
-        }
+        } else { showPopup("bro are we fr", 0); }
     }
     else { startCountdown(); }
 }
 
 function showPopup(msg, bonus) {
     const m = document.getElementById('tuff-message');
-    m.innerText = msg;
-    m.style.display = 'block';
-    score += bonus;
-    sessionScoreDisplay.innerText = score;
+    m.innerText = msg; m.style.display = 'block';
+    score += bonus; sessionScoreDisplay.innerText = score;
     setTimeout(() => { m.style.display = 'none'; adminInput.focus(); }, 2500);
 }
 
@@ -257,75 +210,33 @@ function togglePause() {
     if (gameOver || document.getElementById('video-container').style.display === 'flex') return;
     if (!paused) {
         paused = true;
-        sessionScoreDisplay.innerText = score; // Set score in pause menu
+        sessionScoreDisplay.innerText = score;
         pauseOverlay.style.display = 'flex';
         adminInput.focus();
-    } else {
-        handleCommand();
-    }
+    } else { handleCommand(); }
 }
 
-// Fixed Countdown Logic for Pause System
 function startCountdown() {
-    paused = false;
-    pauseOverlay.style.display = 'none';
-    const originalSpeed = speed; // Save current speed
-    speed = 0; // Freeze gameplay during countdown
-    
-    // Clear projectiles/player physics during countdown if needed
-    
+    paused = false; pauseOverlay.style.display = 'none';
+    const originalSpeed = speed; speed = 0;
     let count = 3;
-    const countCtx = canvas.getContext('2d');
-    
-    function drawCountdown() {
-        if (!gameOver && speed === 0) { // Still counting down
-            draw(); // Draw current frame frozen
-            countCtx.font = "bold 150px Courier New";
-            countCtx.fillStyle = "#00ff66";
-            countCtx.textAlign = "center";
-            countCtx.fillText(count, canvas.width/2, canvas.height/2 + 50);
-        }
-    }
-
-    drawCountdown();
-    
     let timer = setInterval(() => {
         count--;
-        if (count > 0) {
-            drawCountdown();
-        } else {
-            clearInterval(timer);
-            speed = originalSpeed; // Restore speed
-            update();
-        }
+        if (count <= 0) { clearInterval(timer); speed = originalSpeed; update(); }
     }, 1000);
 }
 
-document.getElementById('resumeBtn').onclick = handleCommand;
 adminInput.addEventListener('keydown', e => { if (e.key === 'Enter') handleCommand(); });
-
 window.addEventListener('keydown', e => {
     if (e.code === 'Escape') togglePause();
     if (gameOver || paused || speed === 0 || document.activeElement === adminInput) return;
-    
-    if (e.code === 'Space' || e.code === 'ArrowUp') {
-        if (player.jumps < 2) {
-            player.dy = -16;
-            player.jumps++;
-        }
-    }
-    if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.code === 'KeyW') {
-        playerProjectiles.push({ x: player.x, y: player.y + 25, vx: -16 });
-        player.recoil = 10;
-    }
+    if ((e.code === 'Space' || e.code === 'ArrowUp') && player.jumps < 2) { player.dy = -16; player.jumps++; }
+    if (e.code === 'ArrowDown' || e.code === 'KeyS' || e.code === 'KeyW') { playerProjectiles.push({ x: player.x, y: player.y + 25, vx: -16 }); player.recoil = 10; }
 });
 
 function resetGame() {
-    score = 0; speed = 8; gameOver = false; paused = false; tuffJamperUsed = false;
-    projectiles = []; playerProjectiles = [];
-    player.x = canvas.width - 160;
-    player.y = canvas.height - 180;
-    player.dy = 0; player.jumps = 0;
+    score = 0; speed = 8; gameOver = false; paused = false; projectiles = []; playerProjectiles = [];
+    player.x = canvas.width - 160; player.y = canvas.height - 180; player.dy = 0; player.jumps = 0;
     document.getElementById('retryBtn').style.display = 'none';
     update();
 }
@@ -333,72 +244,40 @@ function resetGame() {
 function update() {
     if (gameOver || paused || speed === 0) return;
     const groundY = canvas.height - 100;
-    speed += 0.001; 
-    player.dy += 0.85;
-    player.y += player.dy;
-
-    if (player.y > groundY - player.h) { 
-        player.y = groundY - player.h; player.dy = 0; player.jumps = 0; 
-    }
-    
+    speed += 0.001; player.dy += 0.85; player.y += player.dy;
+    if (player.y > groundY - player.h) { player.y = groundY - player.h; player.dy = 0; player.jumps = 0; }
     if (player.recoil > 0) player.recoil--;
-    bgScroll -= speed;
-    spawnTimer++;
-
-    if (spawnTimer > (60 / (speed/8)) + Math.random() * 40) {
-        projectiles.push({ x: -50, y: groundY - 55, vx: speed + 4 });
-        spawnTimer = 0;
-    }
-
+    bgScroll -= speed; spawnTimer++;
+    if (spawnTimer > (60 / (speed/8)) + Math.random() * 40) { projectiles.push({ x: -50, y: groundY - 55, vx: speed + 4 }); spawnTimer = 0; }
     projectiles.forEach((p, i) => {
         p.x += p.vx;
         if (p.x < player.x + player.w - 20 && p.x + 40 > player.x + 20 && p.y < player.y + player.h && p.y + 40 > player.y) {
             gameOver = true; document.getElementById('retryBtn').style.display = 'block';
         }
     });
-
     playerProjectiles.forEach((dp, j) => {
         dp.x += dp.vx;
-        if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) {
-            score += 500; hitFeedback = 10; playerProjectiles.splice(j, 1);
-        }
+        if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) { score += 500; hitFeedback = 10; playerProjectiles.splice(j, 1); }
     });
-
     if (hitFeedback > 0) hitFeedback--;
     score += Math.floor(speed / 8);
-    draw();
-    requestAnimationFrame(update);
+    draw(); requestAnimationFrame(update);
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     const bgW = images.bg.width || 100;
     const shiftX = bgScroll % bgW;
-    for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) {
-        ctx.drawImage(images.bg, x, 0, bgW, canvas.height);
-    }
+    for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) ctx.drawImage(images.bg, x, 0, bgW, canvas.height);
     const groundY = canvas.height - 100;
     if (hitFeedback > 0) ctx.filter = "brightness(3) invert(1)";
     ctx.drawImage(images.enemy, 30, groundY - 130, 130, 130);
     ctx.filter = "none";
     ctx.drawImage(images.bottle, 160, groundY - 70, 50, 50);
-
     playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
-    projectiles.forEach(p => {
-        ctx.fillStyle = "rgba(0,0,0,0.3)";
-        ctx.beginPath(); ctx.ellipse(p.x + 25, groundY - 10, 20, 6, 0, 0, Math.PI*2); ctx.fill();
-        ctx.drawImage(images.wata, p.x, p.y, 55, 55);
-    });
-
+    projectiles.forEach(p => ctx.drawImage(images.wata, p.x, p.y, 55, 55));
     ctx.drawImage(images.player, player.x + player.recoil, player.y, player.w, player.h);
-    
-    // SCORE ONLY IN GAMEPLAY
-    if (!paused && speed !== 0) {
-        ctx.font = "bold 28px Courier New";
-        ctx.fillStyle = "#00ffcc";
-        ctx.textAlign = "left";
-        ctx.fillText(`SCORE: ${score}`, 20, 40);
-    }
+    if (!paused && speed !== 0) { ctx.font = "bold 28px Courier New"; ctx.fillStyle = "#00ffcc"; ctx.fillText(`SCORE: ${score}`, 20, 40); }
 }
 </script>
 </body>
