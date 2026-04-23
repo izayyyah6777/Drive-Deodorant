@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>drive deodorant</title>
+    <style>
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #000; 
+            font-family: 'Segoe UI', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+        }
+        canvas { display: none; } 
+        
+        #loading-screen {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background: #000 url('Jamper.png') no-repeat center;
+            background-size: contain; z-index: 500;
+        }
+
+        #percent-text {
+            font-size: 100px; font-weight: bold; color: #00ffcc;
+            text-shadow: 0 0 30px #000, 5px 5px 0px #000;
+        }
+
+        #error-log {
+            color: #ff4444; font-size: 14px; margin-top: 15px;
+            background: rgba(0,0,0,0.9); padding: 15px; border: 1px solid #ff4444;
+            display: none; font-family: monospace; max-width: 80%;
+        }
+
+        #startBtn {
+            display: none; margin-top: 25px; padding: 15px 50px;
+            background: #00ffcc; color: #000; border: none;
+            font-weight: bold; cursor: pointer; border-radius: 5px;
+            font-size: 24px; text-transform: uppercase;
+            box-shadow: 0 0 20px #00ffcc;
+        }
+
+        /* Gameplay UI */
+        .ui-overlay { position: absolute; top: 10px; left: 10px; z-index: 100; display: none; gap: 10px; }
+        .score-board { position: absolute; bottom: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #00ffcc; display: none; text-shadow: 2px 2px #000; }
+        #retryBtn { display: none; position: absolute; padding: 20px 40px; font-size: 24px; background: #00ffcc; color: #000; border: none; cursor: pointer; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 600; font-weight: bold;}
+        h1.game-title { position: absolute; top: 10px; width: 100%; text-align: center; color: #00ffcc; margin: 0; display: none; opacity: 0.5; font-size: 22px; letter-spacing: 3px; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div id="percent-text">0%</div>
+        <div id="error-log"><b>LOADING ERROR:</b><br></div>
+        <button id="startBtn">START BOTTLE</button>
+    </div>
+
+    <div class="ui-overlay" id="ui">
+        <input type="text" id="adminInput" placeholder="Admin Code..." style="background:rgba(0,255,0,0.1); border:1px solid #0f0; color:#0f0; padding:5px; outline:none; width: 110px;">
+        <button id="pauseBtn" style="background:#222; color:#fff; border:1px solid #fff; cursor:pointer; padding:5px 10px;">PAUSE</button>
+    </div>
+
+    <h1 class="game-title" id="title">drive deodorant</h1>
+    <div class="score-board" id="scoreDisplay">SCORE: 0</div>
+    <button id="retryBtn" onclick="resetGame()">RETRY?</button>
+
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+// --- CONFIGURATION ---
+// If your images are in a folder (like 'assets/'), change this to './assets/'
+const IMAGE_PATH = './'; 
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const loadingScreen = document.getElementById('loading-screen');
+const percentText = document.getElementById('percent-text');
+const errorLog = document.getElementById('error-log');
+const startBtn = document.getElementById('startBtn');
+
+const images = {};
+const sources = {
+    player: 'Jamper.png',
+    enemy: 'Lerma.png',
+    dove: 'dove.png',
+    bottle: 'bottle.png',
+    wata: 'wata.png',
+    bg: 'Brixk.png'
+};
+
+let loadedCount = 0;
+const totalImages = Object.keys(sources).length;
+
+// Preload Images
+for (let key in sources) {
+    images[key] = new Image();
+    images[key].src = IMAGE_PATH + sources[key];
+    
+    images[key].onload = () => {
+        loadedCount++;
+        let percent = Math.floor((loadedCount / totalImages) * 100);
+        percentText.innerText = percent + "%";
+        if (loadedCount === totalImages) {
+            startBtn.style.display = "inline-block";
+        }
+    };
+
+    images[key].onerror = () => {
+        percentText.innerText = "!";
+        percentText.style.color = "#ff4444";
+        errorLog.style.display = "block";
+        errorLog.innerHTML += `Could not find: <b>${sources[key]}</b><br>`;
+    };
+}
+
+startBtn.onclick = () => {
+    loadingScreen.style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('ui').style.display = 'flex';
+    document.getElementById('title').style.display = 'block';
+    document.getElementById('scoreDisplay').style.display = 'block';
+    resize();
+    resetGame();
+};
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+
+// --- GAME STATE ---
+let currentScrollSpeed = 8;
+let currentGravity = 0.9;
+let lastLevelScore = 0;
+let score = 0;
+let gameOver = false;
+let paused = false;
+let isAdmin = false;
+let isFlying = false;
+let lastJumpPress = 0;
+let angle = 0;
+let bgScroll = 0;
+let projectiles = [];
+let player = { x: 150, y: 0, w: 50, h: 50, dy: 0, grounded: false };
+const keys = {};
+
+const adminInput = document.getElementById('adminInput');
+adminInput.oninput = () => { if(adminInput.value === "Admin Mode") isAdmin = true; };
+document.getElementById('pauseBtn').onclick = () => { paused = !paused; canvas.focus(); };
+
+function resetGame() {
+    score = 0; gameOver = false; projectiles = []; 
+    player.y = canvas.height - 150; player.dy = 0; angle = 0;
+    currentScrollSpeed = 8; currentGravity = 0.9; lastLevelScore = 0;
+    document.getElementById('retryBtn').style.display = 'none';
+    update();
+}
+
+window.addEventListener('keydown', e => {
+    if (document.activeElement === adminInput) return;
+    keys[e.code] = true;
+    if (e.code === 'Space' && !paused && !gameOver) {
+        const now = Date.now();
+        if (isAdmin && (now - lastJumpPress < 250)) isFlying = !isFlying;
+        lastJumpPress = now;
+        if (!isFlying && player.grounded) {
+            player.dy = -15 - (currentScrollSpeed * 0.1); 
+            player.grounded = false;
+            angle = (angle + 90) % 360;
+        }
+    }
+    if ((e.code === 'KeyW' || e.code === 'ArrowUp') && !gameOver && !paused) {
+        projectiles.push({ x: player.x + 40, y: player.y + 10, vx: 15, vy: 0, type: 'dove' });
+    }
+});
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+function update() {
+    if (paused || gameOver || loadedCount < totalImages) return;
+
+    const groundY = canvas.height - 100;
+    if (score - lastLevelScore >= 1000) {
+        currentScrollSpeed += 1.2;
+        currentGravity += 0.04;
+        lastLevelScore = score;
+    }
+
+    if (isFlying) {
+        if (keys['KeyW'] || keys['ArrowUp']) player.y -= 10;
+        if (keys['KeyS'] || keys['ArrowDown']) player.y += 10;
+        if (keys['KeyA'] || keys['ArrowLeft']) player.x -= 10;
+        if (keys['KeyD'] || keys['ArrowRight']) player.x += 10;
+    } else {
+        player.dy += currentGravity;
+        player.y += player.dy;
+        if (player.y > groundY - player.h) { 
+            player.y = groundY - player.h; 
+            player.dy = 0; 
+            player.grounded = true; 
+        }
+        bgScroll -= currentScrollSpeed;
+    }
+
+    if (Math.random() < 0.04 + (currentScrollSpeed * 0.002)) {
+        projectiles.push({ 
+            x: canvas.width - 50, 
+            y: canvas.height, 
+            vx: -(currentScrollSpeed + 3 + Math.random() * 5), 
+            vy: -(Math.random() * 15 + 8), 
+            type: 'wata' 
+        });
+    }
+
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i]; 
+        p.x += p.vx; p.y += p.vy;
+        if (p.type === 'wata' && !isAdmin) {
+            if (p.x < player.x + player.w - 10 && p.x + 20 > player.x + 10 && 
+                p.y < player.y + player.h - 10 && p.y + 20 > player.y + 10) {
+                gameOver = true; document.getElementById('retryBtn').style.display = 'block';
+            }
+        }
+        if (p.type === 'dove' && p.x > canvas.width - 120) { 
+            score += 100; projectiles.splice(i, 1); 
+        }
+        else if (p.x < -100 || p.y < -200 || p.y > canvas.height + 100) {
+            projectiles.splice(i, 1);
+        }
+    }
+
+    score++;
+    document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Background Tiling
+    const bgW = images.bg.width || 100;
+    const bgH = images.bg.height || 100;
+    const shiftX = bgScroll % bgW;
+    for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) {
+        for (let y = 0; y < canvas.height; y += bgH) {
+            ctx.drawImage(images.bg, x, y, bgW, bgH);
+        }
+    }
+
+    const groundY = canvas.height - 100;
+    ctx.strokeStyle = "#00ffcc"; ctx.lineWidth = 4;
+    ctx.beginPath(); ctx.moveTo(0, groundY); ctx.lineTo(canvas.width, groundY); ctx.stroke();
+
+    // Lerma and Deodorant Bottle
+    ctx.drawImage(images.enemy, canvas.width - 150, groundY - 100, 100, 100);
+    ctx.drawImage(images.bottle, canvas.width - 180, groundY - 60, 45, 45);
+
+    // Jamper
+    ctx.save();
+    ctx.translate(player.x + player.w/2, player.y + player.h/2);
+    if (!isFlying) ctx.rotate(angle * Math.PI / 180);
+    ctx.drawImage(images.player, -player.w/2, -player.h/2, player.w, player.h);
+    ctx.restore();
+
+    // Effects
+    projectiles.forEach(p => {
+        const sprite = p.type === 'dove' ? images.dove : images.wata;
+        ctx.drawImage(sprite, p.x, p.y, 30, 30);
+    });
+}
+</script>
+</body>
+</html>
