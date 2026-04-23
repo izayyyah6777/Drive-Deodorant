@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>drive deodorant</title>
+    <style>
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #000; 
+            font-family: 'Segoe UI', sans-serif;
+            display: flex; justify-content: center; align-items: center;
+        }
+        canvas { display: none; } 
+        
+        #loading-screen {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            background-color: #000;
+            /* We use a standard background first in case Jamper.png fails */
+            z-index: 500;
+        }
+
+        #percent-text {
+            font-size: 100px; font-weight: bold; color: #00ffcc;
+            text-shadow: 0 0 30px #000, 5px 5px 0px #000;
+            z-index: 501;
+        }
+
+        #startBtn {
+            display: none; margin-top: 25px; padding: 15px 50px;
+            background: #00ffcc; color: #000; border: none;
+            font-weight: bold; cursor: pointer; border-radius: 5px;
+            font-size: 24px; text-transform: uppercase;
+            box-shadow: 0 0 20px #00ffcc; z-index: 502;
+        }
+
+        /* Gameplay UI */
+        .ui-overlay { position: absolute; top: 10px; left: 10px; z-index: 100; display: none; gap: 10px; }
+        .score-board { position: absolute; bottom: 20px; left: 20px; font-size: 32px; font-weight: bold; color: #00ffcc; display: none; }
+        #retryBtn { display: none; position: absolute; padding: 20px 40px; font-size: 24px; background: #00ffcc; color: #000; border: none; cursor: pointer; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 600; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen">
+        <div id="percent-text">0%</div>
+        <button id="startBtn">START BOTTLE</button>
+    </div>
+
+    <div class="ui-overlay" id="ui">
+        <input type="text" id="adminInput" placeholder="Admin Code..." style="background:rgba(0,255,0,0.1); border:1px solid #0f0; color:#0f0; padding:5px; outline:none; width: 110px;">
+        <button id="pauseBtn" style="background:#222; color:#fff; border:1px solid #fff; cursor:pointer; padding:5px 10px;">PAUSE</button>
+    </div>
+
+    <div class="score-board" id="scoreDisplay">SCORE: 0</div>
+    <button id="retryBtn" onclick="resetGame()">RETRY?</button>
+
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const loadingScreen = document.getElementById('loading-screen');
+const percentText = document.getElementById('percent-text');
+const startBtn = document.getElementById('startBtn');
+
+// This uses a relative path to find your images in the same folder
+const images = {};
+const sources = {
+    player: 'Jamper.png',
+    enemy: 'Lerma.png',
+    dove: 'dove.png',
+    bottle: 'bottle.png',
+    wata: 'wata.png',
+    bg: 'Brixk.png'
+};
+
+let loadedCount = 0;
+const totalImages = Object.keys(sources).length;
+
+for (let key in sources) {
+    images[key] = new Image();
+    // Using simple relative filename since they are in the same folder
+    images[key].src = sources[key];
+    
+    images[key].onload = () => {
+        loadedCount++;
+        let percent = Math.floor((loadedCount / totalImages) * 100);
+        percentText.innerText = percent + "%";
+        
+        // Special case: Set loading background once Jamper is ready
+        if(key === 'player') {
+            loadingScreen.style.backgroundImage = "url('Jamper.png')";
+            loadingScreen.style.backgroundSize = "contain";
+            loadingScreen.style.backgroundPosition = "center";
+            loadingScreen.style.backgroundRepeat = "no-repeat";
+        }
+
+        if (loadedCount === totalImages) {
+            startBtn.style.display = "inline-block";
+        }
+    };
+
+    images[key].onerror = () => {
+        console.error("Failed to load: " + sources[key]);
+        percentText.innerText = "ERROR";
+    };
+}
+
+startBtn.onclick = () => {
+    loadingScreen.style.display = 'none';
+    canvas.style.display = 'block';
+    document.getElementById('ui').style.display = 'flex';
+    document.getElementById('scoreDisplay').style.display = 'block';
+    resize();
+    resetGame();
+};
+
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resize);
+
+let currentScrollSpeed = 8;
+let currentGravity = 0.9;
+let score = 0;
+let gameOver = false;
+let paused = false;
+let angle = 0;
+let bgScroll = 0;
+let projectiles = [];
+let player = { x: 150, y: 0, w: 60, h: 60, dy: 0, grounded: false };
+
+function resetGame() {
+    score = 0; gameOver = false; projectiles = []; 
+    player.y = canvas.height - 160; player.dy = 0;
+    currentScrollSpeed = 8;
+    document.getElementById('retryBtn').style.display = 'none';
+    update();
+}
+
+window.addEventListener('keydown', e => {
+    if (e.code === 'Space' && !paused && !gameOver && player.grounded) {
+        player.dy = -18; 
+        player.grounded = false;
+        angle = (angle + 90) % 360;
+    }
+});
+
+function update() {
+    if (paused || gameOver) return;
+    const groundY = canvas.height - 100;
+
+    player.dy += currentGravity;
+    player.y += player.dy;
+    if (player.y > groundY - player.h) { 
+        player.y = groundY - player.h; player.dy = 0; player.grounded = true; 
+    }
+    bgScroll -= currentScrollSpeed;
+
+    if (Math.random() < 0.05) {
+        projectiles.push({ x: canvas.width, y: groundY - 40, vx: -currentScrollSpeed - 2, type: 'wata' });
+    }
+
+    for (let i = projectiles.length - 1; i >= 0; i--) {
+        const p = projectiles[i]; p.x += p.vx;
+        if (p.x < player.x + player.w - 10 && p.x + 30 > player.x + 10 && p.y < player.y + player.h && p.y + 30 > player.y) {
+            gameOver = true; document.getElementById('retryBtn').style.display = 'block';
+        }
+        if (p.x < -50) projectiles.splice(i, 1);
+    }
+
+    score++;
+    document.getElementById('scoreDisplay').innerText = `SCORE: ${score}`;
+    draw();
+    requestAnimationFrame(update);
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    const bgW = images.bg.width || 100;
+    const shiftX = bgScroll % bgW;
+    for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) {
+        ctx.drawImage(images.bg, x, 0, bgW, canvas.height);
+    }
+
+    const groundY = canvas.height - 100;
+    ctx.drawImage(images.player, player.x, player.y, player.w, player.h);
+
+    projectiles.forEach(p => {
+        ctx.drawImage(images.wata, p.x, p.y, 40, 40);
+    });
+}
+</script>
+</body>
+</html>
