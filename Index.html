@@ -9,7 +9,7 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; }
         canvas { display: none; background: #000; } 
         
-        /* ERROR OVERLAY */
+        /* ERROR SCREEN */
         #error-screen { 
             position: absolute; width: 100%; height: 100%; background: #000; 
             color: #ff4444; display: none; flex-direction: column; 
@@ -17,7 +17,7 @@
             padding: 40px; z-index: 10000; border: 10px solid #ff4444; box-sizing: border-box;
         }
 
-        /* START SCREEN & PLAY BUTTON */
+        /* START SCREEN */
         #loading-screen { 
             position: absolute; width: 100%; height: 100%; display: flex; 
             flex-direction: column; justify-content: center; align-items: center; 
@@ -28,21 +28,23 @@
             margin-top: 20px; padding: 25px 80px; background: #00ff66; color: #000; 
             border: none; font-weight: bold; cursor: pointer; border-radius: 8px; 
             font-size: 32px; text-transform: uppercase; box-shadow: 0 0 30px #00ff66; 
-            transition: 0.2s;
         }
-        #startBtn:hover { transform: scale(1.05); background: #00cc55; }
         
-        /* ADMIN / PAUSE MENU */
-        #pause-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 10, 0, 0.95); display: none; justify-content: center; align-items: center; z-index: 1000; gap: 40px; }
+        /* PAUSE MENU */
+        #pause-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); display: none; justify-content: center; align-items: center; z-index: 1000; gap: 40px; }
         .menu-sidebar { display: flex; flex-direction: column; gap: 15px; width: 250px; }
         .menu-btn { background: #111; border: 2px solid #00ff66; color: #00ff66; padding: 15px; font-size: 18px; font-weight: bold; text-align: left; cursor: pointer; text-transform: uppercase; }
-        .content-panel { width: 450px; height: 350px; border: 2px solid #00ff66; background: #000; display: flex; flex-direction: column; }
-        .panel-header { background: #00ff66; color: #000; padding: 10px; font-weight: bold; }
-        .panel-body { padding: 20px; color: #00ff66; flex-grow: 1; display: flex; flex-direction: column; gap: 15px; }
-        #adminInput { background: #050505; border: 1px solid #00ff66; color: #00ff66; padding: 12px; font-size: 18px; outline: none; width: 100%; box-sizing: border-box; }
+        .menu-btn:hover { background: #00ff66; color: #000; }
         
-        #video-container { position: absolute; width: 100%; height: 100%; background: #000; display: none; z-index: 4000; justify-content: center; align-items: center; }
-        #tuffVideo { max-width: 90vw; max-height: 90vh; border: 2px solid #00ff66; pointer-events: none; }
+        .content-panel { width: 450px; height: 350px; border: 2px solid #00ff66; background: #000; display: flex; flex-direction: column; position: relative; }
+        .panel-header { background: #00ff66; color: #000; padding: 10px; font-weight: bold; }
+        .copy-btn { position: absolute; top: 10px; right: 10px; color: #000; font-size: 10px; font-weight: bold; }
+
+        .panel-body { padding: 25px; color: #00ff66; flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+        .fact-box { border-top: 1px solid #004422; padding-top: 20px; width: 100%; }
+        .fact-label { font-size: 12px; color: #008844; margin-bottom: 10px; text-transform: uppercase; }
+        .fact-text { font-size: 18px; font-style: italic; line-height: 1.4; }
+
         #retryBtn { display:none; position:absolute; top:60%; left:50%; transform:translate(-50%,-50%); padding:20px 40px; background:#00ff66; font-weight:bold; cursor:pointer; z-index:600; border:none; }
     </style>
 </head>
@@ -57,21 +59,19 @@
         <button id="startBtn">PLAY GAME</button>
     </div>
 
-    <div id="video-container">
-        <video id="tuffVideo" src="Jandel.mp4" playsinline></video>
-    </div>
-
     <div id="pause-overlay">
         <div class="menu-sidebar">
-            <button class="menu-btn" onclick="handleCommand()">Execute CMD</button>
-            <button class="menu-btn" onclick="location.reload()">Reset Session</button>
+            <button class="menu-btn" onclick="togglePause()">Continue</button>
+            <button class="menu-btn" onclick="location.reload()">Restart</button>
         </div>
         <div class="content-panel">
-            <div class="panel-header">COMMAND_TERMINAL_ROOT</div>
+            <div class="panel-header">SYSTEM_PAUSED</div>
+            <div class="copy-btn">© 2026 IZAYYAH_DEV</div>
             <div class="panel-body">
-                <input type="text" id="adminInput" placeholder="READY FOR INPUT..." autofocus autocomplete="off">
-                <div id="status-line" style="font-size: 12px; color: #00ff66;">FLIGHT_MOD: INACTIVE</div>
-                <button class="menu-btn" style="text-align: center; margin-top: auto;" onclick="handleCommand()">Execute</button>
+                <div class="fact-box">
+                    <div class="fact-label">Did you know?</div>
+                    <div id="fact-display" class="fact-text">Loading fun fact...</div>
+                </div>
             </div>
         </div>
     </div>
@@ -83,14 +83,23 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const startBtn = document.getElementById('startBtn');
-const tuffVideo = document.getElementById('tuffVideo');
-const adminInput = document.getElementById('adminInput');
+const factDisplay = document.getElementById('fact-display');
 
-let speed = 8, score = 0, gameOver = false, paused = false, isVideoPlaying = false, flightEnabled = false;
+let speed = 8, score = 0, gameOver = false, paused = false;
 let projectiles = [], playerProjectiles = [], player = { x: 0, y: 0, w: 75, h: 75, dx: 0, dy: 0, jumps: 0, rotation: 0 };
 let bgScroll = 0, spawnTimer = 0, hasFatalError = false;
 
-// ERROR SYSTEM
+// VFX STATE
+let lermaShake = 0;
+const facts = [
+    "Doves are actually just fancy pigeons.",
+    "Geometry Dash was originally called 'The Impossible Game 2'.",
+    "Honey never spoils. Archaeologists found edible honey in ancient Egyptian tombs.",
+    "Octopuses have three hearts.",
+    "Bananas are technically berries, but strawberries aren't.",
+    "The world's smallest penguin is only 13 inches tall."
+];
+
 function triggerFileError(fileName) {
     hasFatalError = true;
     document.getElementById('error-screen').style.display = 'flex';
@@ -98,7 +107,6 @@ function triggerFileError(fileName) {
     document.getElementById('error-msg').innerText = `the file (${fileName}) is no where to be found on your Computer/PC Because of this the game has been unplayable please check in with izayah by @Izayyah_thedev on tt I also have a bottle pfp if not you might have to wait for files to load if you have it in the zip`;
 }
 
-// ASSET LOADING
 const images = {};
 const sources = { player: 'Jamper.png', enemy: 'Lerma.png', dove: 'dove.png', bottle: 'bottle.png', wata: 'wata.png', bg: 'Brixk.png' };
 for (let key in sources) {
@@ -106,60 +114,29 @@ for (let key in sources) {
     images[key].onerror = () => triggerFileError(sources[key]);
     images[key].src = sources[key];
 }
-tuffVideo.onerror = () => triggerFileError("Jandel.mp4");
 
-// CONTROLS (WASD + ARROWS)
 window.addEventListener('keydown', e => {
     if (e.code === 'Escape') togglePause();
-    if (gameOver || paused || isVideoPlaying || hasFatalError) return;
+    if (gameOver || paused || hasFatalError) return;
 
-    if (flightEnabled) {
-        if (['KeyW', 'ArrowUp'].includes(e.code)) player.dy = -10;
-        if (['KeyS', 'ArrowDown'].includes(e.code)) player.dy = 10;
-        if (['KeyA', 'ArrowLeft'].includes(e.code)) player.dx = -10;
-        if (['KeyD', 'ArrowRight'].includes(e.code)) player.dx = 10;
-    } else {
-        if (['Space', 'ArrowUp', 'KeyW'].includes(e.code) && player.jumps < 2) { 
-            player.dy = -16; player.jumps++; 
-        }
-        if (['KeyS', 'ArrowDown'].includes(e.code)) {
-            playerProjectiles.push({ x: player.x, y: player.y + 25, vx: -16 });
-        }
+    if (['Space', 'ArrowUp', 'KeyW'].includes(e.code) && player.jumps < 2) { 
+        player.dy = -16; player.jumps++; 
+    }
+    if (['KeyS', 'ArrowDown'].includes(e.code)) {
+        playerProjectiles.push({ x: player.x, y: player.y + 25, vx: -16 });
     }
 });
 
-window.addEventListener('keyup', e => {
-    if (flightEnabled) {
-        if (['KeyW', 'KeyS', 'ArrowUp', 'ArrowDown'].includes(e.code)) player.dy = 0;
-        if (['KeyA', 'KeyD', 'ArrowLeft', 'ArrowRight'].includes(e.code)) player.dx = 0;
-    }
-});
-
-function handleCommand() {
-    const val = adminInput.value.trim();
-    if (val === 'Admin Mode On') {
-        flightEnabled = true;
-        document.getElementById('status-line').innerText = "FLIGHT_MOD: ACTIVE";
-        adminInput.value = '';
-    } else if (val === 'Admin Mode Off') {
-        flightEnabled = false;
-        player.rotation = 0;
-        document.getElementById('status-line').innerText = "FLIGHT_MOD: INACTIVE";
-        adminInput.value = '';
+function togglePause() {
+    if (gameOver || hasFatalError) return;
+    paused = !paused;
+    if (paused) {
+        factDisplay.innerText = facts[Math.floor(Math.random() * facts.length)];
+        document.getElementById('pause-overlay').style.display = 'flex';
     } else {
-        paused = false;
         document.getElementById('pause-overlay').style.display = 'none';
         update();
     }
-}
-
-function togglePause() {
-    if (gameOver || isVideoPlaying || hasFatalError) return;
-    if (!paused) {
-        paused = true;
-        document.getElementById('pause-overlay').style.display = 'flex';
-        adminInput.focus();
-    } else { handleCommand(); }
 }
 
 startBtn.onclick = () => {
@@ -174,31 +151,25 @@ function resize() { canvas.width = window.innerWidth; canvas.height = window.inn
 
 function resetGame() {
     score = 0; gameOver = false; paused = false; projectiles = []; playerProjectiles = [];
-    player.x = canvas.width - 160; player.y = canvas.height - 180; player.dy = 0; player.dx = 0; player.rotation = 0;
+    player.x = canvas.width - 160; player.y = canvas.height - 180; player.dy = 0; player.rotation = 0;
+    lermaShake = 0;
     document.getElementById('retryBtn').style.display = 'none';
     update();
 }
 
 function update() {
-    if (gameOver || paused || isVideoPlaying || hasFatalError) return;
+    if (gameOver || paused || hasFatalError) return;
     const groundY = canvas.height - 100;
 
-    if (flightEnabled) {
-        player.y += player.dy; player.x += player.dx;
-        player.rotation = 0;
+    player.dy += 0.85;
+    player.y += player.dy;
+    
+    if (player.y < groundY - player.h) {
+        player.rotation += 0.15; 
     } else {
-        player.dy += 0.85;
-        player.y += player.dy;
-        
-        // GD ROTATION LOGIC
-        if (player.y < groundY - player.h) {
-            player.rotation += 0.15; 
-        } else {
-            player.y = groundY - player.h;
-            player.dy = 0; player.jumps = 0;
-            // Snap to ground level orientation
-            player.rotation = Math.round(player.rotation / (Math.PI/2)) * (Math.PI/2);
-        }
+        player.y = groundY - player.h;
+        player.dy = 0; player.jumps = 0;
+        player.rotation = Math.round(player.rotation / (Math.PI/2)) * (Math.PI/2);
     }
 
     if (player.y < 0) player.y = 0;
@@ -214,9 +185,14 @@ function update() {
 
     playerProjectiles.forEach((dp, j) => {
         dp.x += dp.vx;
-        if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) { score += 500; playerProjectiles.splice(j, 1); }
+        if (dp.x < 150 && dp.x > 30 && dp.y > groundY - 120) { 
+            score += 500; 
+            playerProjectiles.splice(j, 1);
+            lermaShake = 15;
+        }
     });
 
+    if (lermaShake > 0) lermaShake--;
     score += 1;
     draw();
     requestAnimationFrame(update);
@@ -227,17 +203,34 @@ function draw() {
     const bgW = images.bg.width || 100;
     const shiftX = bgScroll % bgW;
     for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) ctx.drawImage(images.bg, x, 0, bgW, canvas.height);
+    
     const groundY = canvas.height - 100;
-    ctx.drawImage(images.enemy, 30, groundY - 130, 130, 130);
-    ctx.drawImage(images.bottle, 160, groundY - 70, 50, 50);
+    
+    // DRAW LERMA (WITH SHAKE)
+    let lx = 30;
+    let ly = groundY - 130;
+    if (lermaShake > 0) {
+        lx += (Math.random() - 0.5) * 15;
+        ly += (Math.random() - 0.5) * 15;
+    }
+    ctx.drawImage(images.enemy, lx, ly, 130, 130);
+    ctx.drawImage(images.bottle, lx + 130, groundY - 70, 50, 50);
+
+    // DRAW DOVES
     playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
+    
+    // DRAW WATER WITH NEON SHADOW
     projectiles.forEach(p => {
-        ctx.save(); ctx.shadowBlur = 15; ctx.shadowColor = "cyan"; 
+        ctx.save(); 
+        ctx.shadowBlur = 20; 
+        ctx.shadowColor = "cyan"; 
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
         ctx.drawImage(images.wata, p.x, p.y, 55, 55);
         ctx.restore();
     });
 
-    // DRAW JAMPER ROTATED
+    // DRAW JAMPER
     ctx.save();
     ctx.translate(player.x + player.w / 2, player.y + player.h / 2);
     ctx.rotate(player.rotation);
