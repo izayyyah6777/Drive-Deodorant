@@ -28,23 +28,29 @@
             font-size: 32px; text-transform: uppercase; box-shadow: 0 0 30px #00ff66; 
         }
         
-        /* PAUSE MENU */
+        /* PAUSE MENU & JUKEBOX */
         #pause-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.98); display: none; justify-content: center; align-items: center; z-index: 1000; gap: 20px; }
         .menu-sidebar { display: flex; flex-direction: column; gap: 10px; width: 200px; }
         .menu-btn { background: #111; border: 2px solid #00ff66; color: #00ff66; padding: 12px; font-size: 14px; font-weight: bold; text-align: left; cursor: pointer; text-transform: uppercase; }
         .menu-btn:hover { background: #00ff66; color: #000; }
         
-        .content-panel { width: 550px; height: 450px; border: 2px solid #00ff66; background: #000; display: flex; flex-direction: column; position: relative; }
+        .content-panel { width: 550px; height: 500px; border: 2px solid #00ff66; background: #000; display: flex; flex-direction: column; position: relative; }
         .panel-header { background: #00ff66; color: #000; padding: 8px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
         
-        .jukebox { padding: 15px; display: flex; flex-direction: column; gap: 10px; overflow-y: auto; height: 260px; }
-        .track-item { background: #111; border: 1px solid #004422; padding: 10px; cursor: pointer; }
-        .track-item:hover { border-color: #00ff66; }
-        .track-title { color: #00ff66; font-weight: bold; font-size: 16px; }
-        .track-sub { color: #008844; font-size: 10px; text-transform: uppercase; }
-        
-        .media-controls { margin-top: auto; display: flex; gap: 10px; padding: 15px; border-top: 1px solid #00ff66; }
-        .control-btn { flex: 1; padding: 8px; background: #002211; border: 1px solid #00ff66; color: #00ff66; font-size: 11px; cursor: pointer; }
+        .jukebox { padding: 20px; display: flex; flex-direction: column; gap: 12px; overflow-y: auto; flex-grow: 1; }
+        .track-btn { 
+            background: #001100; border: 1px solid #008844; color: #00ff66; 
+            padding: 15px; cursor: pointer; text-align: left; display: flex; 
+            flex-direction: column; transition: 0.2s; border-left: 5px solid #00ff66;
+        }
+        .track-btn:hover { background: #00ff66; color: #000; transform: translateX(5px); }
+        .track-title { font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+        .track-file { font-size: 10px; opacity: 0.8; letter-spacing: 1px; }
+
+        .media-controls { display: flex; justify-content: center; align-items: center; gap: 20px; padding: 20px; border-top: 1px solid #00ff66; background: #000a00; }
+        .control-icon-btn { background: none; border: none; color: #00ff66; font-size: 24px; cursor: pointer; opacity: 0.7; transition: 0.2s; }
+        .control-icon-btn:hover { opacity: 1; transform: scale(1.1); }
+        .play-pause-circle { font-size: 40px; }
 
         /* COUNTDOWN */
         #countdown-text { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); color: #00ff66; font-size: 120px; font-weight: bold; display: none; z-index: 2000; text-shadow: 0 0 20px #00ff66; }
@@ -80,23 +86,26 @@
             </div>
             
             <div class="jukebox">
-                <div class="track-item" onclick="playTrack('BikeRides.mp3')">
-                    <div class="track-title">Bike Rides</div>
-                    <div class="track-sub">YouTube Library</div>
-                </div>
-                <div class="track-item" onclick="playTrack('Paris.mp3')">
-                    <div class="track-title">Jazz Paris</div>
-                    <div class="track-sub">YouTube Library</div>
-                </div>
-                <div class="track-item" onclick="playTrack('Chicken.mp3')">
-                    <div class="track-title">If I Had A Chicken</div>
-                    <div class="track-sub">YouTube Library</div>
-                </div>
+                <button class="track-btn" onclick="playTrack('BikeRides.mp3')">
+                    <span class="track-title">Bike Rides</span>
+                    <span class="track-file">FILE: BikeRides.mp3</span>
+                </button>
+                <button class="track-btn" onclick="playTrack('Paris.mp3')">
+                    <span class="track-title">Jazz Paris</span>
+                    <span class="track-file">FILE: Paris.mp3</span>
+                </button>
+                <button class="track-btn" onclick="playTrack('Chicken.mp3')">
+                    <span class="track-title">If I Had A Chicken</span>
+                    <span class="track-file">FILE: Chicken.mp3</span>
+                </button>
             </div>
 
             <div class="media-controls">
-                <button class="control-btn" id="repeatBtn" onclick="toggleRepeat()">REPEAT: OFF</button>
-                <button class="control-btn" id="pauseMusicBtn" onclick="toggleMusicPause()">PAUSE MUSIC</button>
+                <button class="control-icon-btn" onclick="toggleRepeat()" title="Shuffle/Loop">🔀</button>
+                <button class="control-icon-btn" onclick="prevTrack()">⏮</button>
+                <button class="control-icon-btn play-pause-circle" id="masterPlay" onclick="toggleMusicPause()">⏸</button>
+                <button class="control-icon-btn" onclick="nextTrack()">⏭</button>
+                <button class="control-icon-btn" id="repeatIcon" onclick="toggleRepeat()">🔁</button>
             </div>
         </div>
     </div>
@@ -109,36 +118,48 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 const countdownEl = document.getElementById('countdown-text');
 const bgMusic = new Audio();
-bgMusic.loop = false; 
+const tracks = ['BikeRides.mp3', 'Paris.mp3', 'Chicken.mp3'];
+let currentTrackIdx = 0;
 
 let isRepeating = false, musicIsPaused = false;
 let speed = 8, score = 0, gameOver = false, paused = false, inCountdown = false;
 let projectiles = [], playerProjectiles = [], player = { x: 0, y: 0, w: 75, h: 75, dy: 0, jumps: 0, rotation: 0 };
 let bgScroll = 0, spawnTimer = 0, hasFatalError = false, lermaShake = 0;
 
-// MUSIC UNPAUSEABLE PROTECTION
+// FORCED UNPAUSEABLE LOGIC
 bgMusic.onpause = () => { if(!musicIsPaused) bgMusic.play().catch(()=>{}); };
 bgMusic.onended = () => {
     if(isRepeating) bgMusic.play();
-    else playTrack(['BikeRides.mp3', 'Paris.mp3', 'Chicken.mp3'][Math.floor(Math.random()*3)]);
+    else nextTrack();
 };
 
 function playTrack(src) {
     musicIsPaused = false;
     bgMusic.src = src;
     bgMusic.play();
-    document.getElementById('pauseMusicBtn').innerText = "PAUSE MUSIC";
+    document.getElementById('masterPlay').innerText = "⏸";
+}
+
+function nextTrack() {
+    currentTrackIdx = (currentTrackIdx + 1) % tracks.length;
+    playTrack(tracks[currentTrackIdx]);
+}
+
+function prevTrack() {
+    currentTrackIdx = (currentTrackIdx - 1 + tracks.length) % tracks.length;
+    playTrack(tracks[currentTrackIdx]);
 }
 
 function toggleRepeat() {
     isRepeating = !isRepeating;
-    document.getElementById('repeatBtn').innerText = `REPEAT: ${isRepeating ? 'ON' : 'OFF'}`;
+    document.getElementById('repeatIcon').style.opacity = isRepeating ? "1" : "0.4";
+    document.getElementById('repeatIcon').style.textShadow = isRepeating ? "0 0 10px #00ff66" : "none";
 }
 
 function toggleMusicPause() {
     musicIsPaused = !musicIsPaused;
     musicIsPaused ? bgMusic.pause() : bgMusic.play();
-    document.getElementById('pauseMusicBtn').innerText = musicIsPaused ? "RESUME MUSIC" : "PAUSE MUSIC";
+    document.getElementById('masterPlay').innerText = musicIsPaused ? "▶" : "⏸";
 }
 
 document.getElementById('file-input').onchange = (e) => {
@@ -152,7 +173,11 @@ const images = {};
 const sources = { player: 'Jamper.png', enemy: 'Lerma.png', dove: 'dove.png', bottle: 'bottle.png', wata: 'wata.png', bg: 'Brixk.png' };
 for (let key in sources) {
     images[key] = new Image();
-    images[key].onerror = () => { hasFatalError = true; document.getElementById('error-screen').style.display = 'flex'; document.getElementById('error-msg').innerText = `Missing: ${sources[key]}`; };
+    images[key].onerror = () => { 
+        hasFatalError = true; 
+        document.getElementById('error-screen').style.display = 'flex'; 
+        document.getElementById('error-msg').innerText = `Missing: ${sources[key]}`; 
+    };
     images[key].src = sources[key];
 }
 
@@ -175,12 +200,11 @@ function togglePause() {
 }
 
 function startCountdown() {
-    paused = true; // Stay technically paused for logic
+    paused = true;
     inCountdown = true;
     countdownEl.style.display = 'block';
     let count = 3;
     countdownEl.innerText = count;
-    
     let timer = setInterval(() => {
         count--;
         if (count <= 0) {
@@ -198,7 +222,7 @@ function startCountdown() {
 document.getElementById('startBtn').onclick = () => {
     document.getElementById('loading-screen').style.display = 'none';
     canvas.style.display = 'block';
-    playTrack(['BikeRides.mp3', 'Paris.mp3', 'Chicken.mp3'][Math.floor(Math.random()*3)]);
+    playTrack(tracks[currentTrackIdx]);
     resize(); resetGame();
 };
 
@@ -240,6 +264,7 @@ function draw() {
     const bgW = images.bg.width || 100;
     const shiftX = bgScroll % bgW;
     for (let x = shiftX - bgW; x < canvas.width + bgW; x += bgW) ctx.drawImage(images.bg, x, 0, bgW, canvas.height);
+    
     const groundY = canvas.height - 100;
     let lx = 30, ly = groundY - 130;
     if (lermaShake > 0) { lx += (Math.random()-0.5)*15; ly += (Math.random()-0.5)*15; }
@@ -247,10 +272,10 @@ function draw() {
     ctx.drawImage(images.bottle, lx + 130, groundY - 70, 50, 50);
     playerProjectiles.forEach(dp => ctx.drawImage(images.dove, dp.x, dp.y, 40, 40));
     
-    // WATER WITH NEON CYAN SHADOWS
+    // WATER RENDERING WITH NEON CYAN SHADOWS
     projectiles.forEach(p => {
         ctx.save(); 
-        ctx.shadowBlur = 20; 
+        ctx.shadowBlur = 25; 
         ctx.shadowColor = "cyan"; 
         ctx.drawImage(images.wata, p.x, p.y, 55, 55); 
         ctx.restore();
