@@ -93,8 +93,14 @@ const playlist = ['BikeRides.mp3', 'Paris.mp3', 'Chicken.mp3'];
 const bgMusic = new Audio();
 bgMusic.loop = true;
 
+// FORCE UNPAUSEABLE LOGIC
+bgMusic.onpause = () => {
+    // If something tries to pause it (Media Player/Keys), force it to play again immediately
+    bgMusic.play().catch(() => {}); 
+};
+
 let speed = 8, score = 0, gameOver = false, paused = false;
-let projectiles = [], playerProjectiles = [], player = { x: 0, y: 0, w: 75, h: 75, dy: 0, jumps: 0, rotation: 0 };
+let projectiles = [], playerProjectiles = [], player = { x: 0, y: 0, w: 75, h: 75, dx: 0, dy: 0, jumps: 0, rotation: 0 };
 let bgScroll = 0, spawnTimer = 0, hasFatalError = false;
 let lermaShake = 0;
 
@@ -107,7 +113,6 @@ function showInspo() {
 
 function triggerFileError(fileName) {
     hasFatalError = true;
-    bgMusic.pause();
     document.getElementById('error-screen').style.display = 'flex';
     document.getElementById('loading-screen').style.display = 'none';
     document.getElementById('error-msg').innerText = `the file (${fileName}) is no where to be found...`;
@@ -142,7 +147,6 @@ function togglePause() {
     if (gameOver || hasFatalError) return;
     paused = !paused;
     if (paused) {
-        // bgMusic.pause(); // UNCOMMENT THIS TO MAKE MUSIC STOP ON PAUSE
         copyBtn.innerText = "© 2026 IZAYYAH_DEV";
         copyBtn.style.fontSize = "9px";
         factDisplay.innerText = facts[Math.floor(Math.random() * facts.length)];
@@ -173,10 +177,8 @@ function resetGame() {
 }
 
 function update() {
-    if (gameOver || paused || hasFatalError) {
-        if (gameOver) bgMusic.pause(); 
-        return;
-    }
+    if (gameOver || paused || hasFatalError) return;
+    
     const groundY = canvas.height - 100;
     player.dy += 0.85;
     player.y += player.dy;
