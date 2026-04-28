@@ -3,83 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>drive deodorant</title>
-    <link rel="icon" type="image/png" href="Jamper.png">
+    <title>Drive Deodorant</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
         
-        /* MAIN GAME - BRICK BACKGROUND */
-        #game-canvas { 
-            display: block; 
-            background-image: url('brick.png'); /* Main game brick background */
-            background-size: repeat;
-            width: 100vw;
-            height: 100vh;
+        /* START SCREEN */
+        #loading-screen { position: fixed; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .start-btn { background: #00ff66; color: #000; border: none; padding: 25px 60px; font-size: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px #00ff66; }
+
+        /* MAIN GAME - BRICK BACKGROUND & CHARACTERS */
+        #main-game { position: relative; width: 100vw; height: 100vh; background: url('brick.png') repeat; display: none; }
+        .sprite { position: absolute; bottom: 20%; height: 120px; width: auto; }
+        #jamper { left: 10%; }
+        #lerma { left: 30%; }
+        #bottle { left: 50%; height: 60px; }
+        #dove { right: 10%; top: 15%; height: 80px; }
+
+        /* TIKTOK FARLANDS - THE VIDEO PLAYER SIZE FIX */
+        #farlands-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('TIKTOKFARLANDS.png') center/cover; display: none; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; }
+        
+        /* Adjusted width and height to fit standard mobile portraits clearly */
+        #farlands-video { 
+            width: 420px; 
+            height: 750px; 
+            object-fit: contain; /* Shows the full video frame without cropping */
+            background: #000;
+            border: 5px solid #ff8800; 
+            box-shadow: 0 0 40px #ff8800; 
         }
 
-        /* UI OVERLAY */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; justify-content: center; align-items: center; z-index: 1000; gap: 20px; background: rgba(0,0,0,0.85); }
-        
-        /* BOX DESIGN */
-        .box { border: 2px solid #00ff66; background: #000; height: 500px; display: flex; flex-direction: column; box-shadow: 0 0 20px rgba(0, 255, 102, 0.2); }
-        .box-header { background: #00ff66; color: #000; padding: 10px; font-weight: bold; font-size: 14px; display: flex; justify-content: space-between; }
-        .box-body { padding: 15px; color: #00ff66; overflow-y: auto; flex-grow: 1; }
+        .orange-btn { background: #cc7700; border: none; color: #fff; width: 70px; height: 70px; border-radius: 12px; font-size: 30px; cursor: pointer; box-shadow: 0 0 15px #ff8800; margin-top: 20px; }
 
-        .side-menu { display: flex; flex-direction: column; gap: 12px; width: 200px; }
-        .btn { background: #000; border: 2px solid #00ff66; color: #00ff66; padding: 12px; cursor: pointer; text-align: left; font-weight: bold; text-transform: uppercase; }
-        .btn:hover { background: #00ff66; color: #000; }
-
-        /* TIKTOK FARLANDS PORTRAIT */
-        #farlands-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('TIKTOKFARLANDS.png') center/cover; display: none; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; }
-        #farlands-video { width: 380px; height: 675px; object-fit: cover; border: 4px solid #ff8800; box-shadow: 0 0 35px #ff8800; }
-        
-        .orange-btn { background: #cc7700; border: none; color: #fff; width: 65px; height: 65px; border-radius: 10px; font-size: 28px; cursor: pointer; box-shadow: 0 0 15px #ff8800; margin-top: 20px; }
-        #esc-warn { color: #ff0000; font-weight: bold; margin-top: 15px; display: none; text-shadow: 0 0 10px #000; }
+        /* UI BOXES */
+        .pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; gap: 20px; z-index: 1000; }
+        .box { border: 2px solid #00ff66; background: #000; height: 500px; width: 400px; display: flex; flex-direction: column; }
+        .box-header { background: #00ff66; color: #000; padding: 10px; font-weight: bold; }
+        .box-body { padding: 15px; color: #00ff66; flex-grow: 1; }
+        .btn-side { background: #000; border: 2px solid #00ff66; color: #00ff66; padding: 15px; width: 180px; cursor: pointer; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-    <div id="pause-screen" class="overlay">
-        <div class="side-menu">
-            <button class="btn" onclick="togglePause()">CONTINUE</button>
-            <button class="btn" onclick="toggleBox('terminal')">TERMINAL</button>
-            <button class="btn" onclick="toggleBox('credits')">CREDITS</button>
-            <button class="btn" onclick="triggerFunFact()">FUN FACTS</button>
-            <button class="btn" onclick="location.reload()">RESTART</button>
-        </div>
+    <div id="loading-screen">
+        <button class="start-btn" onclick="startGame()">PLAY GAME</button>
+    </div>
 
-        <div class="box" id="juke-box" style="width: 450px;">
-            <div class="box-header"><span>SYSTEM_JUKEBOX</span><span>© 2026 IZAYYAH_DEV</span></div>
+    <div id="main-game">
+        <img src="Jamper.png" id="jamper" class="sprite">
+        <img src="lerma.png" id="lerma" class="sprite">
+        <img src="bottle.png" id="bottle" class="sprite">
+        <img src="dove.png" id="dove" class="sprite">
+    </div>
+
+    <div id="pause-screen" class="pause-overlay">
+        <div style="display:flex; flex-direction:column;">
+            <button class="btn-side" onclick="togglePause()">CONTINUE</button>
+            <button class="btn-side" onclick="toggleTerminal()">TERMINAL</button>
+        </div>
+        <div class="box">
+            <div class="box-header">SYSTEM_JUKEBOX</div>
             <div class="box-body">
-                <div class="btn" style="width:92%; margin-bottom:8px;" onclick="play('BikeRides.mp3')">Bike Rides</div>
-                <div class="btn" style="width:92%; margin-bottom:8px;" onclick="play('Paris.mp3')">Jazz Paris</div>
-                <div class="btn" style="width:92%; margin-bottom:8px;" onclick="play('Chicken.mp3')">If I Had A Chicken</div>
+                <button class="btn-side" style="width:100%" onclick="play('BikeRides.mp3')">Bike Rides</button>
+                <button class="btn-side" style="width:100%" onclick="play('Paris.mp3')">Jazz Paris</button>
+                <button class="btn-side" style="width:100%" onclick="play('Chicken.mp3')">If I Had A Chicken</button>
             </div>
         </div>
-
-        <div class="box" id="term-box" style="width: 320px; display:none;">
-            <div class="box-header"><span>TERMINAL</span></div>
+        <div class="box" id="term-window" style="display:none; width:300px;">
+            <div class="box-header">TERMINAL</div>
             <div class="box-body">
-                <div id="log">> Initializing Jamper System...</div>
-                <div id="log">> Characters: Lerma, Jamper, Dove loaded.</div>
-                <input type="text" id="cmd" style="background:transparent; border:none; color:#00ff66; width:100%; outline:none; border-top:1px solid #004411; margin-top:10px; padding-top:5px;" placeholder="COMMAND_">
-            </div>
-        </div>
-
-        <div class="box" id="cred-box" style="width: 280px; display:none;">
-            <div class="box-header"><span>CREDITS</span></div>
-            <div class="box-body">
-                <p><strong>DEVELOPER:</strong></p>
-                <p>@izayyah_dev</p>
-                <br>
-                <p><strong>CAST:</strong></p>
-                <p>- Jamper</p>
-                <p>- Lerma</p>
-                <p>- Bottle</p>
-                <p>- Dove</p>
-                <br>
-                <p><strong>AUDIO:</strong></p>
-                <p>YouTube Audio Library</p>
+                <p>> System Ready.</p>
+                <input type="text" id="cmd-input" style="background:transparent; border:none; border-top:1px solid #00ff66; color:#00ff66; width:100%; outline:none; padding-top:10px;" placeholder="COMMAND_">
             </div>
         </div>
     </div>
@@ -87,44 +80,17 @@
     <div id="farlands-ui">
         <video id="farlands-video"></video>
         <button class="orange-btn" onclick="toggleVid()">⏸</button>
-        <div id="esc-warn">YOU CAN'T ESCAPE THE FARLANDS</div>
     </div>
-
-    <canvas id="game-canvas"></canvas>
 
 <script>
     const vids = ['speed.mp4', 'man.mp4', 'hero.mp4', 'tiktok.mp4', 'bart.mp4', 'Kid.mp4', 'bear.mp4'];
     const audio = new Audio();
     const video = document.getElementById('farlands-video');
-    let secretActive = false;
+    let farlandsActive = false;
 
-    // Terminal logic for the secret
-    document.getElementById('cmd').addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') {
-            if(e.target.value.toLowerCase() === 'tiktok') {
-                secretActive = true;
-                document.getElementById('pause-screen').style.display = 'none';
-                document.getElementById('farlands-ui').style.display = 'flex';
-                video.src = vids[0]; // speed.mp4 first
-                video.play();
-            }
-            e.target.value = '';
-        }
-    });
-
-    function triggerFunFact() {
-        const rand = Math.random();
-        if(rand < 0.01) {
-            alert("did you know that this fact is so rare but it only comes as 1% chance and also dont type TikTok into the terminal");
-        } else {
-            const facts = ["Lerma is watching the bottle.", "Dove flies over the brick walls.", "Jamper is ready."];
-            alert(facts[Math.floor(Math.random() * facts.length)]);
-        }
-    }
-
-    function toggleBox(id) {
-        const b = document.getElementById(id === 'terminal' ? 'term-box' : 'cred-box');
-        b.style.display = b.style.display === 'none' ? 'flex' : 'none';
+    function startGame() {
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('main-game').style.display = 'block';
     }
 
     function togglePause() {
@@ -132,28 +98,34 @@
         p.style.display = p.style.display === 'none' ? 'flex' : 'none';
     }
 
-    window.addEventListener('keydown', (e) => {
-        if(e.key === 'Escape') {
-            if(secretActive) {
-                const w = document.getElementById('esc-warn');
-                w.style.display = 'block';
-                setTimeout(() => w.style.display = 'none', 2000);
-            } else {
-                togglePause();
+    function toggleTerminal() {
+        const t = document.getElementById('term-window');
+        t.style.display = t.style.display === 'none' ? 'flex' : 'none';
+    }
+
+    document.getElementById('cmd-input').addEventListener('keypress', (e) => {
+        if(e.key === 'Enter') {
+            if(e.target.value.toLowerCase() === 'tiktok') {
+                farlandsActive = true;
+                document.getElementById('pause-screen').style.display = 'none';
+                document.getElementById('farlands-ui').style.display = 'flex';
+                video.src = vids[0]; // Start with speed.mp4
+                video.play();
             }
+            e.target.value = '';
         }
-        // Infinite random scroll
-        if(secretActive && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+    });
+
+    window.addEventListener('keydown', (e) => {
+        if(e.key === 'Escape') togglePause();
+        if(farlandsActive && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
             video.src = vids[Math.floor(Math.random() * vids.length)];
             video.play();
         }
     });
 
-    function toggleVid() { video.paused ? video.play() : video.pause(); }
     function play(s) { audio.src = s; audio.play(); }
-
-    const c = document.getElementById('game-canvas');
-    c.width = window.innerWidth; c.height = window.innerHeight;
+    function toggleVid() { video.paused ? video.play() : video.pause(); }
 </script>
 </body>
 </html>
