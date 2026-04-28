@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>drive deodorant</title>
+    <link rel="icon" type="image/png" href="Jamper.png">
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; display: flex; justify-content: center; align-items: center; }
+        canvas { display: none; background: #000; } 
+        
+        #pause-overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 5, 0, 0.95); display: none; justify-content: center; align-items: center; z-index: 1000; gap: 20px; flex-wrap: nowrap; }
+        
+        .menu-sidebar { display: flex; flex-direction: column; gap: 15px; width: 200px; }
+        .menu-btn { background: #111; border: 2px solid #00ff66; color: #00ff66; padding: 15px; font-size: 14px; font-weight: bold; text-align: left; cursor: pointer; text-transform: uppercase; }
+        .menu-btn:hover { background: #00ff66; color: #000; box-shadow: 0 0 15px #00ff66; }
+
+        /* SEPARATE BOXES */
+        .content-panel, .terminal-panel, .credits-panel { border: 2px solid #00ff66; background: #000; display: flex; flex-direction: column; height: 500px; }
+        .content-panel { width: 450px; }
+        .terminal-panel { width: 300px; display: none; }
+        .credits-panel { width: 250px; display: none; }
+
+        .panel-header { background: #00ff66; color: #000; padding: 10px; font-weight: bold; font-size: 12px; display: flex; justify-content: space-between; }
+        
+        .panel-body { padding: 15px; color: #00ff66; flex-grow: 1; overflow-y: auto; }
+        .track-btn { background: #000; border: 1px solid #00ff66; color: #00ff66; padding: 10px; margin-bottom: 10px; cursor: pointer; text-align: left; width: 100%; border-left: 5px solid #00ff66; }
+        
+        #term-input { background: transparent; border: none; color: #00ff66; outline: none; font-family: inherit; width: 100%; border-top: 1px solid #004411; padding-top: 5px; margin-top: 10px; }
+
+        /* TIKTOK FARLANDS */
+        #tiktok-farlands { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('TIKTOKFARLANDS.png') center/cover; display: none; flex-direction: column; justify-content: center; align-items: center; z-index: 5000; }
+        #farlands-video { width: 400px; height: 700px; object-fit: cover; border: 4px solid #ff8800; box-shadow: 0 0 30px #ff8800; }
+
+        /* ORANGE CONTROLS */
+        .orange-btn { background: #cc7700; border: none; color: #fff; width: 50px; height: 50px; border-radius: 8px; font-size: 24px; cursor: pointer; box-shadow: 0 0 15px #ff8800; margin-top: 20px; }
+        .media-controls { display: flex; justify-content: center; align-items: center; gap: 15px; padding: 10px; border-top: 1px solid #00ff66; }
+        .control-btn { background: #cc7700; border: none; color: #fff; width: 35px; height: 35px; border-radius: 4px; box-shadow: 0 0 10px #ff8800; cursor: pointer; }
+
+        #escape-warning { position: absolute; bottom: 50px; color: red; font-weight: bold; display: none; }
+    </style>
+</head>
+<body>
+
+    <div id="loading-screen" style="position:absolute; width:100%; height:100%; background:#000; display:flex; justify-content:center; align-items:center; z-index:500;">
+        <button id="startBtn" style="padding:20px 60px; background:#00ff66; cursor:pointer; font-weight:bold;">PLAY GAME</button>
+    </div>
+
+    <div id="pause-overlay">
+        <div class="menu-sidebar">
+            <button class="menu-btn" onclick="togglePause()">CONTINUE</button>
+            <button class="menu-btn" onclick="toggleTerminal()">TERMINAL</button>
+            <button class="menu-btn" onclick="toggleCredits()">CREDITS</button>
+            <button class="menu-btn" onclick="location.reload()">RESTART</button>
+        </div>
+        
+        <div class="content-panel">
+            <div class="panel-header"><span>MAINGAME_JUKEBOX</span><span>© 2026 IZAYYAH_DEV</span></div>
+            <div class="panel-body">
+                <button class="track-btn" onclick="playTrack('BikeRides.mp3')">Bike Rides</button>
+                <button class="track-btn" onclick="playTrack('Paris.mp3')">Jazz Paris</button>
+                <button class="track-btn" onclick="playTrack('Chicken.mp3')">If I Had A Chicken</button>
+            </div>
+            <div class="media-controls">
+                <button class="control-btn">🔀</button>
+                <button class="control-btn" id="jukePauseBtn" onclick="toggleJukePause()" style="width:50px; height:50px; font-size:20px;">⏸</button>
+                <button class="control-btn">🔁</button>
+            </div>
+        </div>
+
+        <div class="terminal-panel" id="terminal-box">
+            <div class="panel-header"><span>TERMINAL</span></div>
+            <div class="panel-body">
+                <div id="term-log">>execute</div>
+                <input type="text" id="term-input" placeholder="Type here..." autocomplete="off">
+            </div>
+        </div>
+
+        <div class="credits-panel" id="credits-box">
+            <div class="panel-header"><span>CREDITS</span></div>
+            <div class="panel-body">
+                <p style="font-weight: bold; border-bottom: 1px solid #00ff66; padding-bottom: 5px;">DEVELOPER</p>
+                <p>TikTok: @izayyah_dev</p>
+                <br>
+                <p style="font-weight: bold; border-bottom: 1px solid #00ff66; padding-bottom: 5px;">AUDIO</p>
+                <p>Source: YouTube Audio Library</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="tiktok-farlands">
+        <video id="farlands-video"></video>
+        <button class="orange-btn" onclick="toggleFarlandsPlay()" id="vidPauseBtn">⏸</button>
+        <div id="escape-warning">YOU CAN'T ESCAPE THE FARLANDS</div>
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+
+<script>
+const termInput = document.getElementById('term-input'), farlandsDiv = document.getElementById('tiktok-farlands'), farlandsVid = document.getElementById('farlands-video');
+const tiktokVids = ['speed.mp4', 'man.mp4', 'hero.mp4', 'tiktok.mp4', 'bart.mp4', 'Kid.mp4', 'bear.mp4'];
+const bgMusic = new Audio();
+let eventActive = false, paused = false;
+
+// UI TOGGLES
+function toggleTerminal() { 
+    const box = document.getElementById('terminal-box');
+    box.style.display = (box.style.display === 'flex') ? 'none' : 'flex'; 
+}
+
+function toggleCredits() {
+    const box = document.getElementById('credits-box');
+    box.style.display = (box.style.display === 'flex') ? 'none' : 'flex';
+}
+
+// MUSIC CONTROLS
+function playTrack(src) { bgMusic.src = src; bgMusic.play(); document.getElementById('jukePauseBtn').innerText = "⏸"; }
+function toggleJukePause() {
+    if (bgMusic.paused) { bgMusic.play(); document.getElementById('jukePauseBtn').innerText = "⏸"; }
+    else { bgMusic.pause(); document.getElementById('jukePauseBtn').innerText = "▶"; }
+}
+
+// TIKTOK EVENT
+termInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        if (termInput.value.toLowerCase().trim() === 'tiktok') {
+            eventActive = true;
+            bgMusic.pause();
+            document.getElementById('pause-overlay').style.display = 'none';
+            farlandsDiv.style.display = 'flex';
+            farlandsVid.src = tiktokVids[0];
+            farlandsVid.play();
+        }
+        termInput.value = '';
+    }
+});
+
+function toggleFarlandsPlay() {
+    if (farlandsVid.paused) { farlandsVid.play(); document.getElementById('vidPauseBtn').innerText = "⏸"; }
+    else { farlandsVid.pause(); document.getElementById('vidPauseBtn').innerText = "▶"; }
+}
+
+// GLOBAL KEYS
+window.addEventListener('keydown', (e) => {
+    if (eventActive && e.key === 'Escape') {
+        e.preventDefault();
+        document.getElementById('escape-warning').style.display = 'block';
+        setTimeout(() => { document.getElementById('escape-warning').style.display = 'none'; }, 2000);
+    } else if (!eventActive && e.key === 'Escape') {
+        paused = !paused;
+        document.getElementById('pause-overlay').style.display = paused ? 'flex' : 'none';
+    }
+});
+
+document.getElementById('startBtn').onclick = () => { 
+    document.getElementById('loading-screen').style.display = 'none';
+    document.getElementById('gameCanvas').style.display = 'block'; 
+};
+</script>
+</body>
+</html>
