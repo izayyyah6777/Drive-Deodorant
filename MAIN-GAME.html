@@ -8,124 +8,110 @@
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
         
         /* START SCREEN */
-        #loading-screen { position: fixed; width: 100%; height: 100%; background: #000; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .start-btn { background: #00ff66; color: #000; border: none; padding: 25px 60px; font-size: 30px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px #00ff66; }
+        #start-screen { position: fixed; inset: 0; background: #000; display: flex; justify-content: center; align-items: center; z-index: 10000; }
+        .start-btn { background: #00ff66; border: none; padding: 25px 60px; font-size: 32px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px #00ff66; border-radius: 5px; }
 
-        /* MAIN GAME - BRICK BACKGROUND & CHARACTERS */
-        #main-game { position: relative; width: 100vw; height: 100vh; background: url('brick.png') repeat; display: none; }
-        .sprite { position: absolute; bottom: 20%; height: 120px; width: auto; }
-        #jamper { left: 10%; }
-        #lerma { left: 30%; }
-        #bottle { left: 50%; height: 60px; }
-        #dove { right: 10%; top: 15%; height: 80px; }
-
-        /* TIKTOK FARLANDS - THE VIDEO PLAYER SIZE FIX */
-        #farlands-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('TIKTOKFARLANDS.png') center/cover; display: none; z-index: 5000; flex-direction: column; justify-content: center; align-items: center; }
-        
-        /* Adjusted width and height to fit standard mobile portraits clearly */
-        #farlands-video { 
-            width: 420px; 
-            height: 750px; 
-            object-fit: contain; /* Shows the full video frame without cropping */
-            background: #000;
-            border: 5px solid #ff8800; 
-            box-shadow: 0 0 40px #ff8800; 
+        /* MAIN GAME WORLD - USING BRIXK.PNG */
+        #game-view { 
+            position: absolute; width: 100vw; height: 100vh; 
+            background: url('Brixk.png') repeat; /* Matches your file list */
+            background-size: 150px; 
+            display: none; 
         }
 
-        .orange-btn { background: #cc7700; border: none; color: #fff; width: 70px; height: 70px; border-radius: 12px; font-size: 30px; cursor: pointer; box-shadow: 0 0 15px #ff8800; margin-top: 20px; }
+        /* SPRITE POSITIONS & SCALING */
+        .sprite { position: absolute; bottom: 20%; height: 160px; width: auto; image-rendering: pixelated; }
+        #jamper { left: 10%; }
+        #lerma  { left: 30%; height: 180px; }
+        #bottle { left: 55%; height: 90px; }
+        #dove   { right: 15%; top: 15%; height: 100px; }
 
-        /* UI BOXES */
-        .pause-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; gap: 20px; z-index: 1000; }
-        .box { border: 2px solid #00ff66; background: #000; height: 500px; width: 400px; display: flex; flex-direction: column; }
-        .box-header { background: #00ff66; color: #000; padding: 10px; font-weight: bold; }
-        .box-body { padding: 15px; color: #00ff66; flex-grow: 1; }
-        .btn-side { background: #000; border: 2px solid #00ff66; color: #00ff66; padding: 15px; width: 180px; cursor: pointer; font-weight: bold; text-transform: uppercase; margin-bottom: 10px; }
+        /* TIKTOK FARLANDS - THE PLAYER FIX */
+        #farlands-ui { 
+            position: fixed; inset: 0; 
+            background: url('TIKTOKFARLANDS.png') no-repeat center center; 
+            background-size: cover; 
+            display: none; z-index: 9000; 
+            flex-direction: column; justify-content: center; align-items: center; 
+        }
+
+        #farlands-video { 
+            width: 450px; /* Large mobile portrait width */
+            height: 800px; /* High-definition portrait height */
+            background: #000;
+            object-fit: contain; 
+            border: 5px solid #ff8800; 
+            box-shadow: 0 0 50px #ff8800; 
+        }
+
+        .orange-ctrl { 
+            background: #cc7700; color: white; border: none; width: 80px; height: 80px; 
+            border-radius: 15px; margin-top: 25px; font-size: 35px; cursor: pointer; 
+            box-shadow: 0 0 20px #ff8800; 
+        }
+
+        #esc-msg { position: absolute; bottom: 40px; color: red; font-weight: bold; font-size: 24px; display: none; text-shadow: 0 0 10px #000; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <div id="loading-screen">
+    <div id="start-screen">
         <button class="start-btn" onclick="startGame()">PLAY GAME</button>
     </div>
 
-    <div id="main-game">
-        <img src="Jamper.png" id="jamper" class="sprite">
-        <img src="lerma.png" id="lerma" class="sprite">
-        <img src="bottle.png" id="bottle" class="sprite">
-        <img src="dove.png" id="dove" class="sprite">
-    </div>
-
-    <div id="pause-screen" class="pause-overlay">
-        <div style="display:flex; flex-direction:column;">
-            <button class="btn-side" onclick="togglePause()">CONTINUE</button>
-            <button class="btn-side" onclick="toggleTerminal()">TERMINAL</button>
-        </div>
-        <div class="box">
-            <div class="box-header">SYSTEM_JUKEBOX</div>
-            <div class="box-body">
-                <button class="btn-side" style="width:100%" onclick="play('BikeRides.mp3')">Bike Rides</button>
-                <button class="btn-side" style="width:100%" onclick="play('Paris.mp3')">Jazz Paris</button>
-                <button class="btn-side" style="width:100%" onclick="play('Chicken.mp3')">If I Had A Chicken</button>
-            </div>
-        </div>
-        <div class="box" id="term-window" style="display:none; width:300px;">
-            <div class="box-header">TERMINAL</div>
-            <div class="box-body">
-                <p>> System Ready.</p>
-                <input type="text" id="cmd-input" style="background:transparent; border:none; border-top:1px solid #00ff66; color:#00ff66; width:100%; outline:none; padding-top:10px;" placeholder="COMMAND_">
-            </div>
-        </div>
+    <div id="game-view">
+        <img src="Jamper.png" id="jamper" class="sprite" alt="Jamper">
+        <img src="Lerma.png"  id="lerma"  class="sprite" alt="Lerma">
+        <img src="bottle.png" id="bottle" class="sprite" alt="Bottle">
+        <img src="dove.png"   id="dove"   class="sprite" alt="Dove">
     </div>
 
     <div id="farlands-ui">
-        <video id="farlands-video"></video>
-        <button class="orange-btn" onclick="toggleVid()">⏸</button>
+        <video id="farlands-video" loop></video>
+        <button class="orange-ctrl" onclick="toggleVid()">⏸</button>
+        <div id="esc-msg">YOU CAN'T ESCAPE THE FARLANDS</div>
     </div>
 
 <script>
     const vids = ['speed.mp4', 'man.mp4', 'hero.mp4', 'tiktok.mp4', 'bart.mp4', 'Kid.mp4', 'bear.mp4'];
-    const audio = new Audio();
-    const video = document.getElementById('farlands-video');
-    let farlandsActive = false;
+    const vidPlayer = document.getElementById('farlands-video');
+    const farlands = document.getElementById('farlands-ui');
+    const escMsg = document.getElementById('esc-msg');
+    let isFarlands = false;
+    let inputBuffer = "";
 
     function startGame() {
-        document.getElementById('loading-screen').style.display = 'none';
-        document.getElementById('main-game').style.display = 'block';
+        document.getElementById('start-screen').style.display = 'none';
+        document.getElementById('game-view').style.display = 'block';
     }
 
-    function togglePause() {
-        const p = document.getElementById('pause-screen');
-        p.style.display = p.style.display === 'none' ? 'flex' : 'none';
-    }
-
-    function toggleTerminal() {
-        const t = document.getElementById('term-window');
-        t.style.display = t.style.display === 'none' ? 'flex' : 'none';
-    }
-
-    document.getElementById('cmd-input').addEventListener('keypress', (e) => {
-        if(e.key === 'Enter') {
-            if(e.target.value.toLowerCase() === 'tiktok') {
-                farlandsActive = true;
-                document.getElementById('pause-screen').style.display = 'none';
-                document.getElementById('farlands-ui').style.display = 'flex';
-                video.src = vids[0]; // Start with speed.mp4
-                video.play();
-            }
-            e.target.value = '';
-        }
-    });
-
+    // Secret trigger and Escape logic
     window.addEventListener('keydown', (e) => {
-        if(e.key === 'Escape') togglePause();
-        if(farlandsActive && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
-            video.src = vids[Math.floor(Math.random() * vids.length)];
-            video.play();
+        if (!isFarlands) {
+            inputBuffer += e.key.toLowerCase();
+            if (inputBuffer.includes("tiktok")) {
+                isFarlands = true;
+                document.getElementById('game-view').style.display = 'none';
+                farlands.style.display = 'flex';
+                vidPlayer.src = vids[0];
+                vidPlayer.play();
+                inputBuffer = "";
+            }
+        } else {
+            // TikTok Farlands reference: You can't escape
+            if (e.key === "Escape") {
+                escMsg.style.display = 'block';
+                setTimeout(() => { escMsg.style.display = 'none'; }, 2000);
+            }
+            // Vertical Scroll Simulation
+            if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                vidPlayer.src = vids[Math.floor(Math.random() * vids.length)];
+                vidPlayer.play();
+            }
         }
     });
 
-    function play(s) { audio.src = s; audio.play(); }
-    function toggleVid() { video.paused ? video.play() : video.pause(); }
+    function toggleVid() { vidPlayer.paused ? vidPlayer.play() : vidPlayer.pause(); }
 </script>
 </body>
 </html>
